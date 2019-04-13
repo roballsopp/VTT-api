@@ -1,0 +1,26 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "prettier"
+  ],
+  "plugins": [
+    "prettier"
+  ],
+  "env": {
+    "node": true,
+    "es6": true
+  },
+  "rules": {
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    "no-unused-vars": 2,
+    "no-duplicate-imports": 0,
+    "prettier/prettier": ["error", {
+      "useTabs": true,
+      "tabWidth": 2,
+      "printWidth": 80,
+      "singleQuote": true,
+      "trailingComma": "es5"
+    }],
+    "space-before-function-paren": 0
+  }
+}
