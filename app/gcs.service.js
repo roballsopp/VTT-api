@@ -10,6 +10,7 @@ function getSignedUrl(filename) {
 
 	return file.getSignedUrl({
 		action: 'write',
+		version: 'v4',
 		expires: moment()
 			.add(10, 'minutes')
 			.toISOString(),
