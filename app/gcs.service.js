@@ -39,10 +39,12 @@ async function initSpeechToTextOp(filename, options = {}) {
 }
 
 async function getSpeechToTextOp(name) {
+	// using the cloud speech api isn't super easy, but this method is: https://github.com/googleapis/nodejs-speech/issues/10#issuecomment-415900469
 	const auth = await google.auth.getClient({
 		scopes: ['https://www.googleapis.com/auth/cloud-platform'],
 	});
 	const { data } = await google.speech('v1').operations.get({ auth, name });
+	// documentation for this response: https://cloud.google.com/speech-to-text/docs/reference/rest/v1/operations
 	const { done, response, error } = data;
 
 	if (error) {
