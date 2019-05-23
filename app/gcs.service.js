@@ -1,6 +1,7 @@
 const moment = require('moment');
 const { Storage } = require('@google-cloud/storage');
-const Speech = require('@google-cloud/speech');
+const { SpeechClient } = require('@google-cloud/speech');
+const { google } = require('googleapis');
 
 const AUDIO_BUCKET = 'autovtt_test';
 
@@ -19,10 +20,9 @@ function getSignedUrl(filename) {
 			.toISOString(),
 	});
 }
+const speech = new SpeechClient();
 
-const speech = new Speech.SpeechClient();
-
-async function getTextFromSpeech(filename, options = {}) {
+async function initSpeechToTextOp(filename, options = {}) {
 	const [operation] = await speech.longRunningRecognize({
 		config: {
 			encoding: 'LINEAR16', // LINEAR16 is PCM at bit depth 16, https://cloud.google.com/speech-to-text/docs/encoding
@@ -34,16 +34,29 @@ async function getTextFromSpeech(filename, options = {}) {
 			uri: `gs://${AUDIO_BUCKET}/${filename}`,
 		},
 	});
-	// Get a Promise representation of the final result of the job
-	const [response] = await operation.promise();
-	console.log("HI", response.results);
-	const transcription = response.results
-		.map(result => result.alternatives[0].transcript)
-		.join('\n');
-	console.log(`Transcription: ${transcription}`);
+
+	return operation.latestResponse.name;
+}
+
+async function getSpeechToTextOp(name) {
+	const auth = await google.auth.getClient({
+		scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+	});
+	const { data } = await google.speech('v1').operations.get({ auth, name });
+	const { done, response, error } = data;
+
+	if (error) {
+		console.error('OP ERROR', error.details);
+		throw new Error(error.message);
+	}
+	if (response) {
+		return { done, results: response.results };
+	}
+	return { done };
 }
 
 module.exports = {
 	getSignedUrl,
-	getTextFromSpeech,
+	initSpeechToTextOp,
+	getSpeechToTextOp,
 };
