@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "eslint \"**/*.js\"",
     "lint-fix": "eslint \"{./**/*.js,}\" --fix",
-    "start": "nodemon index.dev.js"
+    "start": "nodemon index.dev.js",
+    "test": "mocha"
   },
   "author": "",
   "license": "ISC",
@@ -22,9 +23,11 @@
     "winston": "^3.2.1"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-prettier": "^3.0.1",
+    "mocha": "^6.1.4",
     "nodemon": "^1.18.11",
     "prettier": "^1.17.0"
   }

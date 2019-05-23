@@ -11,7 +11,8 @@
   },
   "env": {
     "node": true,
-    "es6": true
+    "es6": true,
+    "mocha": true
   },
   "rules": {
     "no-console": ["error", { "allow": ["warn", "error"] }],
@@ -20,7 +21,7 @@
     "prettier/prettier": ["error", {
       "useTabs": true,
       "tabWidth": 2,
-      "printWidth": 80,
+      "printWidth": 120,
       "singleQuote": true,
       "trailingComma": "es5"
     }],
