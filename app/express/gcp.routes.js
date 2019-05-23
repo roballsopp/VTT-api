@@ -1,4 +1,4 @@
-const gcsService = require('../gcs.service');
+const gcsService = require('../services/gcs.service');
 
 module.exports = app => {
 	app.get('/upload', async (req, res) => {
