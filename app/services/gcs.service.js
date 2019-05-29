@@ -27,7 +27,7 @@ async function initSpeechToTextOp(filename, options = {}) {
 		config: {
 			encoding: 'LINEAR16', // LINEAR16 is PCM at bit depth 16, https://cloud.google.com/speech-to-text/docs/encoding
 			// sampleRateHertz: 44100, // omit to automatically set
-			languageCode: 'en-GB', // en-US (american english), en-GB (british english), ...https://cloud.google.com/speech-to-text/docs/languages
+			languageCode: 'en-US', // en-US (american english), en-GB (british english), ...https://cloud.google.com/speech-to-text/docs/languages
 			enableWordTimeOffsets: true,
 			enableAutomaticPunctuation: true,
 			...options,
