@@ -11,6 +11,15 @@ module.exports = app => {
 		}
 	});
 
+	app.get('/speech-to-text/languages', async (req, res) => {
+		try {
+			const languages = await gcsService.getLanuageCodes();
+			res.json({ languages });
+		} catch (e) {
+			res.status(500).send(e.message);
+		}
+	});
+
 	app.post('/speech-to-text/:filename', async (req, res) => {
 		const { filename } = req.params;
 		const { languageCode } = req.body;

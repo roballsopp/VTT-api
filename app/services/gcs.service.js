@@ -59,8 +59,20 @@ async function getSpeechToTextOp(name) {
 	return { done };
 }
 
+function getLanuageCodes() {
+	return [
+		{ value: 'en-US', display: 'English (American)' },
+		{ value: 'en-GB', display: 'English (British)' },
+		{ value: 'en-CA', display: 'English (Canada)' },
+		{ value: 'en-AU', display: 'English (Australia)' },
+		{ value: 'es-MX', display: 'Español (México)' },
+		{ value: 'es-ES', display: 'Español (España)' },
+	];
+}
+
 module.exports = {
 	getSignedUrl,
 	initSpeechToTextOp,
 	getSpeechToTextOp,
+	getLanuageCodes,
 };
