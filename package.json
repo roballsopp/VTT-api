@@ -20,6 +20,7 @@
     "express-winston": "^3.1.0",
     "googleapis": "^40.0.0",
     "moment": "^2.24.0",
+    "stripe": "^7.1.0",
     "winston": "^3.2.1"
   },
   "devDependencies": {
