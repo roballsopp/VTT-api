@@ -1,3 +1,4 @@
+require('dotenv').config();
 const winston = require('winston');
 const expressWinston = require('express-winston');
 const express = require('express');
@@ -7,7 +8,7 @@ const createRoutes = require('./express');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: process.env.CORS_ORIGIN, methods: ['GET', 'POST'] }));
 app.use(express.json());
 
 app.use(
