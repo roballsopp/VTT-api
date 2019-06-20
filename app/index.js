@@ -22,6 +22,8 @@ app.use(
 	})
 );
 
+app.get('/health', (req, res) => res.status(200).json({ status: 'Ok' }));
+
 createRoutes(app);
 
 app.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}`));
