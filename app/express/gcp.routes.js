@@ -1,10 +1,10 @@
-const gcsService = require('../services/gcs.service');
+const gcpService = require('../services/gcp.service');
 
 module.exports = app => {
 	app.get('/upload', async (req, res) => {
 		const filename = Date.now() + '';
 		try {
-			const url = await gcsService.getSignedUrl(filename);
+			const url = await gcpService.getSignedUrl(filename);
 			res.json({ filename, url });
 		} catch (e) {
 			res.status(500).send(e.message);
@@ -13,7 +13,7 @@ module.exports = app => {
 
 	app.get('/speech-to-text/languages', async (req, res) => {
 		try {
-			const languages = await gcsService.getLanuageCodes();
+			const languages = await gcpService.getLanuageCodes();
 			res.json({ languages });
 		} catch (e) {
 			res.status(500).send(e.message);
@@ -31,7 +31,7 @@ module.exports = app => {
 		}
 
 		try {
-			const operationId = await gcsService.initSpeechToTextOp(filename, options);
+			const operationId = await gcpService.initSpeechToTextOp(filename, options);
 			res.status(201).send({ operationId });
 		} catch (e) {
 			res.status(500).send(e.message);
@@ -42,7 +42,7 @@ module.exports = app => {
 		const { operationId } = req.params;
 
 		try {
-			const resp = await gcsService.getSpeechToTextOp(operationId);
+			const resp = await gcpService.getSpeechToTextOp(operationId);
 			res.status(200).send(resp);
 		} catch (e) {
 			res.status(500).send(e.message);

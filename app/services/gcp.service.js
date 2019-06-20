@@ -3,11 +3,9 @@ const { Storage } = require('@google-cloud/storage');
 const { SpeechClient } = require('@google-cloud/speech');
 const { google } = require('googleapis');
 
-const AUDIO_BUCKET = 'autovtt_test';
-
 const storage = new Storage();
 
-const myBucket = storage.bucket(AUDIO_BUCKET);
+const myBucket = storage.bucket(process.env.AUDIO_BUCKET);
 
 function getSignedUrl(filename) {
 	const file = myBucket.file(filename);
@@ -33,7 +31,7 @@ async function initSpeechToTextOp(filename, options = {}) {
 			...options,
 		},
 		audio: {
-			uri: `gs://${AUDIO_BUCKET}/${filename}`,
+			uri: `gs://${process.env.AUDIO_BUCKET}/${filename}`,
 		},
 	});
 
