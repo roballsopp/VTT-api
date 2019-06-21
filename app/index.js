@@ -4,7 +4,7 @@ const expressWinston = require('express-winston');
 const express = require('express');
 const cors = require('cors');
 
-const createRoutes = require('./express');
+const { createRoutes, errorHandler } = require('./express');
 
 const app = express();
 
@@ -25,5 +25,7 @@ app.use(
 app.get('/health', (req, res) => res.status(200).json({ status: 'Ok' }));
 
 createRoutes(app);
+
+app.use(errorHandler);
 
 app.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}`));
