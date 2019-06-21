@@ -8,7 +8,7 @@ const { createRoutes, errorHandler } = require('./express');
 
 const app = express();
 
-app.use(cors({ origin: process.env.CORS_ORIGIN, methods: ['GET', 'POST'] }));
+app.use(cors({ origin: process.env.CORS_ORIGIN, methods: ['GET', 'POST', 'DELETE'] }));
 app.use(express.json());
 
 app.use(

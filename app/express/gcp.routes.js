@@ -11,6 +11,16 @@ module.exports = app => {
 		}
 	});
 
+	app.delete('/files/:filename', async (req, res, next) => {
+		const { filename } = req.params;
+		try {
+			await gcpService.deleteFile(filename);
+			res.status(204).send();
+		} catch (e) {
+			next(e);
+		}
+	});
+
 	app.get('/speech-to-text/languages', async (req, res, next) => {
 		try {
 			const languages = await gcpService.getLanuageCodes();

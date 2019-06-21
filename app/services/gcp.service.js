@@ -2,13 +2,15 @@ const moment = require('moment');
 const { Storage } = require('@google-cloud/storage');
 const { SpeechClient } = require('@google-cloud/speech');
 const { google } = require('googleapis');
+const { ServerError } = require('../errors');
+
+const speech = new SpeechClient();
 
 const storage = new Storage();
-
-const myBucket = storage.bucket(process.env.AUDIO_BUCKET);
+const audioBucket = storage.bucket(process.env.AUDIO_BUCKET);
 
 function getSignedUrl(filename) {
-	const file = myBucket.file(filename);
+	const file = audioBucket.file(filename);
 
 	return file.getSignedUrl({
 		action: 'write',
@@ -18,7 +20,10 @@ function getSignedUrl(filename) {
 			.toISOString(),
 	});
 }
-const speech = new SpeechClient();
+
+async function deleteFile(filename) {
+	return audioBucket.file(filename).delete();
+}
 
 async function initSpeechToTextOp(filename, options = {}) {
 	const [operation] = await speech.longRunningRecognize({
@@ -49,7 +54,7 @@ async function getSpeechToTextOp(name) {
 
 	if (error) {
 		console.error('OP ERROR', error.details);
-		throw new Error(error.message);
+		throw new ServerError(error.message);
 	}
 	if (response) {
 		return { done, results: response.results };
@@ -70,6 +75,7 @@ function getLanuageCodes() {
 
 module.exports = {
 	getSignedUrl,
+	deleteFile,
 	initSpeechToTextOp,
 	getSpeechToTextOp,
 	getLanuageCodes,
