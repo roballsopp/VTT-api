@@ -22,6 +22,7 @@ function getSignedUrl(filename) {
 }
 
 async function deleteFile(filename) {
+	// docs: https://cloud.google.com/nodejs/docs/reference/storage/2.5.x/File#delete
 	return audioBucket.file(filename).delete();
 }
 
