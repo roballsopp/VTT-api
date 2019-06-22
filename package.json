@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint \"**/*.js\"",
     "lint-fix": "eslint \"{./**/*.js,}\" --fix",
-    "start": "nodemon app/index.js",
+    "start": "nodemon -r dotenv/config app/index.js",
     "test": "mocha"
   },
   "author": "",
