@@ -1,7 +1,11 @@
+const Sentry = require('@sentry/node');
 const { BadRequestError, NotFoundError, ServerError } = require('../errors');
+
+Sentry.init({ dsn: process.env.SENTRY_DSN });
 
 // eslint-disable-next-line no-unused-vars
 module.exports = (err, req, res, next) => {
+	Sentry.captureException(err);
 	res = res.status(getStatusCodeFromError(err));
 	if (process.env.NODE_ENV === 'development') {
 		res.json({ message: err.message, stack: getStackTraceFromError(err) });
