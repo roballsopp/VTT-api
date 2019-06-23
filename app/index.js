@@ -2,6 +2,7 @@ const winston = require('winston');
 const expressWinston = require('express-winston');
 const express = require('express');
 const cors = require('cors');
+const { LoggingWinston } = require('@google-cloud/logging-winston');
 
 const { createRoutes, errorHandler } = require('./express');
 
@@ -12,7 +13,8 @@ app.use(express.json());
 
 app.use(
 	expressWinston.logger({
-		transports: [new winston.transports.Console()],
+		// options for GCP LoggingWinston: https://github.com/googleapis/nodejs-logging-winston/blob/master/src/index.ts
+		transports: [new winston.transports.Console(), new LoggingWinston({ logName: 'vtt-creator-backend' })],
 		format: winston.format.combine(winston.format.colorize(), winston.format.json()),
 		meta: true, // optional: control whether you want to log the meta data about the request (default to true)
 		// msg: 'HTTP {{req.method}} {{req.url}}', // optional: customize the default logging message. E.g. "{{res.statusCode}} {{req.method}} {{res.responseTime}}ms {{req.url}}"
