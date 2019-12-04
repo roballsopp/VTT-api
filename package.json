@@ -17,7 +17,6 @@
     "@google-cloud/storage": "^2.5.0",
     "@sentry/node": "^5.4.3",
     "cors": "^2.8.5",
-    "express": "^4.16.4",
     "googleapis": "^40.0.0",
     "moment": "^2.24.0",
     "stripe": "^7.1.0"
