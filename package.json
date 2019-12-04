@@ -13,17 +13,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google-cloud/logging-winston": "^1.0.1",
     "@google-cloud/speech": "^2.3.1",
     "@google-cloud/storage": "^2.5.0",
     "@sentry/node": "^5.4.3",
     "cors": "^2.8.5",
     "express": "^4.16.4",
-    "express-winston": "^3.1.0",
     "googleapis": "^40.0.0",
     "moment": "^2.24.0",
-    "stripe": "^7.1.0",
-    "winston": "^3.2.1"
+    "stripe": "^7.1.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
