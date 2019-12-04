@@ -12,4 +12,8 @@ createRoutes(app);
 
 app.use(errorHandler);
 
-exports.vttCreatorApp = app;
+if (process.env.NODE_ENV === 'production') {
+	exports.vttCreatorApp = app;
+} else {
+	app.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}`));
+}
