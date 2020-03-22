@@ -50,7 +50,8 @@ async function getSpeechToTextOp(name) {
 		scopes: ['https://www.googleapis.com/auth/cloud-platform'],
 	});
 	const { data } = await google.speech('v1').operations.get({ auth, name });
-	// documentation for this response: https://cloud.google.com/speech-to-text/docs/reference/rest/v1/operations
+	// documentation for operations response: https://cloud.google.com/speech-to-text/docs/reference/rest/v1/operations
+	// documentation for the response.results field (determined by the speech to text api in this case) https://cloud.google.com/speech-to-text/docs/basics#responses
 	const { done, response, error } = data;
 
 	if (error) {
