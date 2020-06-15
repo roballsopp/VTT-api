@@ -66,7 +66,6 @@ async function getSpeechToTextOp(name) {
 
 function getLanuageCodes() {
 	return [
-		{ value: 'de-DE', display: 'German' },
 		{ value: 'en-US', display: 'English (American)' },
 		{ value: 'en-GB', display: 'English (British)' },
 		{ value: 'en-CA', display: 'English (Canada)' },
@@ -74,6 +73,7 @@ function getLanuageCodes() {
 		{ value: 'es-MX', display: 'Español (México)' },
 		{ value: 'es-ES', display: 'Español (España)' },
 		{ value: 'fr-FR', display: 'French' },
+		{ value: 'de-DE', display: 'German' },
 		{ value: 'hi-IN', display: 'Hindi' },
 		{ value: 'it-IT', display: 'Italian' },
 	];
