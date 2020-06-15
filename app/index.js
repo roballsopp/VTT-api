@@ -22,6 +22,8 @@ app.use(
 	})
 );
 
+app.get('/health', (req, res) => res.status(200).json({ status: 'Ok' }));
+
 createRoutes(app);
 
 app.use(errorHandler);
