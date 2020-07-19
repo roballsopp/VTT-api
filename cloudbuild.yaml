@@ -1,6 +1,5 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    dir: './server'
     args: ['build', '-t', 'gcr.io/$PROJECT_ID/$BUILD_ID', '.']
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/$BUILD_ID']
