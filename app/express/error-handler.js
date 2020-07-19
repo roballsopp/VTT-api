@@ -6,15 +6,26 @@ Sentry.init({ dsn: process.env.SENTRY_DSN });
 // eslint-disable-next-line no-unused-vars
 module.exports = (err, req, res, next) => {
 	Sentry.captureException(err);
-	res = res.status(getStatusCodeFromError(err));
-	if (process.env.NODE_ENV === 'development') {
-		res.json({ message: err.message, stack: getStackTraceFromError(err) });
-	} else {
-		res.json({ message: err.message });
-	}
+	const stack = getStackTraceFromError(err);
+	const statusCode = getStatusCodeFromError(err);
+
+	console.error(
+		JSON.stringify({
+			severity: 'error',
+			message: `${statusCode} - ${req.method} ${req.originalUrl} - ${err.message}`,
+			headers: req.headers,
+			body: req.body,
+			query: req.query,
+			stack,
+		})
+	);
+
+	res.status(statusCode).json({ message: err.message, stack });
 };
 
 function getStackTraceFromError(err) {
+	// don't share stack trace in prod
+	if (process.env.NODE_ENV !== 'development') return [];
 	const stack = (err && err.stack) || '';
 	return stack.split('\n');
 }
