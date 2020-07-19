@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint \"**/*.js\"",
     "lint-fix": "eslint \"{./**/*.js,}\" --fix",
-    "start": "./app/index.js",
+    "start": "node ./app/index.js",
     "dev": "nodemon ./app/index.js",
     "test": "mocha"
   },
