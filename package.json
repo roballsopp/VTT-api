@@ -18,11 +18,9 @@
     "@sentry/node": "^5.4.3",
     "cors": "^2.8.5",
     "express": "4.17.1",
-    "express-winston": "^4.0.1",
     "googleapis": "45.0.0",
     "moment": "^2.24.0",
-    "stripe": "^7.1.0",
-    "winston": "^3.2.1"
+    "stripe": "^7.1.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
