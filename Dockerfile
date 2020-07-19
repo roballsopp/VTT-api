@@ -1,5 +1,5 @@
 FROM node:14-alpine
-WORKDIR /us/app/
+WORKDIR /usr/app/
 COPY . ./
 RUN yarn
 CMD yarn start
