@@ -3,9 +3,8 @@ const { createPaypalModel } = require('./paypal');
 const { createUserModel } = require('./user');
 
 module.exports = () => {
-	return {
-		gcp: createGCPModel(),
-		paypal: createPaypalModel(),
-		user: createUserModel(),
-	};
+	const gcp = createGCPModel();
+	const paypal = createPaypalModel();
+	const user = createUserModel({ paypalModel: paypal });
+	return { gcp, paypal, user };
 };

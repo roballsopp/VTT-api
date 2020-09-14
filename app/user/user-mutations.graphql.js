@@ -13,9 +13,7 @@ module.exports = {
 		},
 		resolve: async (_, args, ctx) => {
 			const { orderId } = args;
-			const { access_token } = await ctx.models.paypal.getAccessToken();
-			const order = await ctx.models.paypal.getOrder(orderId, access_token);
-			return ctx.models.user.addCredit(ctx.user['cognito:username'], Number(order.purchase_units[0].amount.value));
+			return ctx.models.user.addCreditFromOrder(ctx.user['cognito:username'], orderId);
 		},
 	},
 };
