@@ -1,13 +1,3 @@
-const gcpRoutes = require('./gcp.routes');
-const stripeRoutes = require('./stripe.routes');
-const errorHandler = require('./error-handler');
-const requestLogger = require('./request-logger');
+const createServer = require('./server');
 
-module.exports = {
-	createRoutes: app => {
-		gcpRoutes(app);
-		stripeRoutes(app);
-	},
-	errorHandler,
-	requestLogger,
-};
+module.exports = { createServer };

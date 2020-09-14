@@ -9,16 +9,18 @@ const speech = new SpeechClient();
 const storage = new Storage();
 const audioBucket = storage.bucket(process.env.AUDIO_BUCKET);
 
-function getSignedUrl(filename) {
+async function getSignedUrl(filename) {
 	const file = audioBucket.file(filename);
 
-	return file.getSignedUrl({
+	const [url] = await file.getSignedUrl({
 		action: 'write',
 		version: 'v4',
 		expires: moment()
 			.add(10, 'minutes')
 			.toISOString(),
 	});
+
+	return url;
 }
 
 async function deleteFile(filename) {
@@ -52,19 +54,19 @@ async function getSpeechToTextOp(name) {
 	const { data } = await google.speech('v1').operations.get({ auth, name });
 	// documentation for operations response: https://cloud.google.com/speech-to-text/docs/reference/rest/v1/operations
 	// documentation for the response.results field (determined by the speech to text api in this case) https://cloud.google.com/speech-to-text/docs/basics#responses
-	const { done, response, error } = data;
+	const { done = false, response, error } = data;
 
 	if (error) {
 		console.error('OP ERROR', error.details);
 		throw new ServerError(error.message);
 	}
 	if (response) {
-		return { done, results: response.results };
+		return { done: done || false, results: response.results };
 	}
-	return { done };
+	return { done: done || false };
 }
 
-function getLanuageCodes() {
+function getLanguageCodes() {
 	return [
 		{ value: 'en-US', display: 'English (American)' },
 		{ value: 'en-GB', display: 'English (British)' },
@@ -79,10 +81,12 @@ function getLanuageCodes() {
 	];
 }
 
-module.exports = {
-	getSignedUrl,
-	deleteFile,
-	initSpeechToTextOp,
-	getSpeechToTextOp,
-	getLanuageCodes,
+module.exports = function createGCPModel() {
+	return {
+		getSignedUrl,
+		deleteFile,
+		initSpeechToTextOp,
+		getSpeechToTextOp,
+		getLanguageCodes,
+	};
 };
