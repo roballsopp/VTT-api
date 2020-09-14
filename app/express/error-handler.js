@@ -1,5 +1,5 @@
 const Sentry = require('@sentry/node');
-const { BadRequestError, NotFoundError, ServerError } = require('../errors');
+const { BadRequestError, ForbiddenError, NotFoundError, ServerError, UnauthorizedError } = require('../errors');
 
 Sentry.init({ dsn: process.env.SENTRY_DSN });
 
@@ -32,6 +32,8 @@ function getStackTraceFromError(err) {
 
 function getStatusCodeFromError(err) {
 	if (err instanceof BadRequestError) return 400;
+	if (err instanceof UnauthorizedError) return 401;
+	if (err instanceof ForbiddenError) return 403;
 	if (err instanceof NotFoundError) return 404;
 	if (err instanceof ServerError) return 500;
 	return 500;
