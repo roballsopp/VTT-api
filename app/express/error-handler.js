@@ -1,4 +1,5 @@
 const Sentry = require('@sentry/node');
+const { UnauthorizedError: JwtUnauthorizedError } = require('express-jwt');
 const { BadRequestError, ForbiddenError, NotFoundError, ServerError, UnauthorizedError } = require('../errors');
 
 Sentry.init({ dsn: process.env.SENTRY_DSN });
@@ -33,6 +34,7 @@ function getStackTraceFromError(err) {
 function getStatusCodeFromError(err) {
 	if (err instanceof BadRequestError) return 400;
 	if (err instanceof UnauthorizedError) return 401;
+	if (err instanceof JwtUnauthorizedError) return 401;
 	if (err instanceof ForbiddenError) return 403;
 	if (err instanceof NotFoundError) return 404;
 	if (err instanceof ServerError) return 500;
