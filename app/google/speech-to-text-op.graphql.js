@@ -34,8 +34,22 @@ const SpeechRecognitionAlternativeType = new GraphQLObjectType({
 const SpeechRecognitionWordType = new GraphQLObjectType({
 	name: 'SpeechRecognitionWord',
 	fields: () => ({
-		startTime: { type: GraphQLNonNull(GraphQLString), description: 'A string in the form "1.300s"' },
-		endTime: { type: GraphQLNonNull(GraphQLString), description: 'A string in the form "1.400s"' },
+		startTime: {
+			type: GraphQLNonNull(GraphQLFloat),
+			description: 'in seconds from the beginning of the audio',
+			resolve: t => {
+				// startTime.seconds and endTime.seconds come back from google as this weird `Long` data type: https://github.com/dcodeIO/long.js
+				// github comment about it: https://github.com/googleapis/nodejs-speech/issues/417#issuecomment-517806650
+				return t.startTime.seconds.toNumber() + t.startTime.nanos / 1000000000;
+			},
+		},
+		endTime: {
+			type: GraphQLNonNull(GraphQLFloat),
+			description: 'in seconds from the beginning of the audio',
+			resolve: t => {
+				return t.endTime.seconds.toNumber() + t.endTime.nanos / 1000000000;
+			},
+		},
 		word: { type: GraphQLNonNull(GraphQLString), description: 'A string of the word, e.g. "cool"' },
 	}),
 });

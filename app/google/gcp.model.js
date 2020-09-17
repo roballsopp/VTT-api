@@ -1,7 +1,6 @@
 const moment = require('moment');
 const { Storage } = require('@google-cloud/storage');
 const { SpeechClient } = require('@google-cloud/speech');
-const { google } = require('googleapis');
 const { ServerError } = require('../errors');
 
 const speech = new SpeechClient();
@@ -47,21 +46,16 @@ async function initSpeechToTextOp(filename, options = {}) {
 }
 
 async function getSpeechToTextOp(name) {
-	// using the cloud speech api isn't super easy, but this method is: https://github.com/googleapis/nodejs-speech/issues/10#issuecomment-415900469
-	const auth = await google.auth.getClient({
-		scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-	});
-	const { data } = await google.speech('v1').operations.get({ auth, name });
-	// documentation for operations response: https://cloud.google.com/speech-to-text/docs/reference/rest/v1/operations
-	// documentation for the response.results field (determined by the speech to text api in this case) https://cloud.google.com/speech-to-text/docs/basics#responses
-	const { done = false, response, error } = data;
+	// The not very descriptive api documentation: https://googleapis.dev/nodejs/speech/latest/v1.SpeechClient.html#checkLongRunningRecognizeProgress
+	// Slightly more illuminating: https://cloud.google.com/speech-to-text/docs/reference/rest/v1/operations
+	const { done = false, error, result } = await speech.checkLongRunningRecognizeProgress(name);
 
 	if (error) {
 		console.error('OP ERROR', error.details);
 		throw new ServerError(error.message);
 	}
-	if (response) {
-		return { done: done || false, results: response.results };
+	if (result) {
+		return { done: done || false, results: result.results };
 	}
 	return { done: done || false };
 }
