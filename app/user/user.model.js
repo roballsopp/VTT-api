@@ -57,5 +57,22 @@ module.exports = function createUserModel({ paypalModel }) {
 			});
 	}
 
-	return { findById, addCreditFromOrder };
+	function changeCredit(userId, creditDelta) {
+		return findById(userId).then(user => {
+			const currentCredit = Number(user['custom:credit'] || 0);
+			const newCredit = (currentCredit + creditDelta).toFixed(2);
+			return cognitoClient
+				.adminUpdateUserAttributes({
+					UserAttributes: [{ Name: 'custom:credit', Value: newCredit }],
+					UserPoolId: process.env.COGNITO_POOL_ID,
+					Username: userId,
+				})
+				.then(() => {
+					user['custom:credit'] = newCredit;
+					return user;
+				});
+		});
+	}
+
+	return { findById, addCreditFromOrder, changeCredit };
 };
