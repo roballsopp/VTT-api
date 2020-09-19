@@ -2,11 +2,14 @@ const moment = require('moment');
 const { Storage } = require('@google-cloud/storage');
 const { SpeechClient } = require('@google-cloud/speech');
 const { ServerError } = require('../errors');
+const wave = require('../wave');
 
 const speech = new SpeechClient();
 
 const storage = new Storage();
 const audioBucket = storage.bucket(process.env.AUDIO_BUCKET);
+
+const SPEECH_TO_TEXT_COST_PER_MINUTE = 0.1; // $0.10 per minute
 
 async function getSignedUrl(filename) {
 	const file = audioBucket.file(filename);
@@ -20,6 +23,22 @@ async function getSignedUrl(filename) {
 	});
 
 	return url;
+}
+
+async function getFileBytes(filename, start, end) {
+	const file = audioBucket.file(filename);
+	const readable = await file.createReadStream({ start, end });
+	const chunks = [];
+	for await (let chunk of readable) {
+		chunks.push(chunk);
+	}
+	return Buffer.concat(chunks);
+}
+
+async function getSpeechToTextCost(filename) {
+	// data chunk could appear anywhere, but its probably within the first kb.
+	const { duration } = await getFileBytes(filename, { start: 0, end: 1024 }).then(wave.getInfo);
+	return Math.round((duration / 60) * SPEECH_TO_TEXT_COST_PER_MINUTE * 100) / 100;
 }
 
 async function deleteFile(filename) {
@@ -78,6 +97,7 @@ function getLanguageCodes() {
 module.exports = function createGCPModel() {
 	return {
 		getSignedUrl,
+		getSpeechToTextCost,
 		deleteFile,
 		initSpeechToTextOp,
 		getSpeechToTextOp,
