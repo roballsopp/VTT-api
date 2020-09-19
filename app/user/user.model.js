@@ -20,6 +20,11 @@ module.exports = function createUserModel({ paypalModel }) {
 		}
 	}
 
+	async function getCredit(userId) {
+		const user = await findById(userId);
+		return Number(user['custom:credit'] || 0);
+	}
+
 	function addCreditFromOrder(userId, orderId) {
 		return paypalModel
 			.getAccessToken()
@@ -57,22 +62,77 @@ module.exports = function createUserModel({ paypalModel }) {
 			});
 	}
 
-	function changeCredit(userId, creditDelta) {
+	function initTranscription(userId, operationId, fileName, cost) {
+		return cognitoClient
+			.adminUpdateUserAttributes({
+				UserAttributes: [
+					{ Name: 'custom:transcription_op', Value: operationId },
+					{ Name: 'custom:transcription_state', Value: 'pending' },
+					{ Name: 'custom:transcription_cost', Value: cost.toFixed(2) },
+					{ Name: 'custom:transcription_file', Value: fileName },
+				],
+				UserPoolId: process.env.COGNITO_POOL_ID,
+				Username: userId,
+			})
+			.then(() => {
+				return findById(userId);
+			});
+	}
+
+	async function failTranscription(userId, operationId) {
 		return findById(userId).then(user => {
-			const currentCredit = Number(user['custom:credit'] || 0);
-			const newCredit = (currentCredit + creditDelta).toFixed(2);
+			const pendingOpId = user['custom:transcription_op'];
+			const opState = user['custom:transcription_state'];
+
+			if (opState !== 'pending') {
+				throw new BadRequestError('Cannot fail transcription, operation already finished');
+			}
+			if (pendingOpId !== operationId) {
+				throw new BadRequestError(`Op ${operationId} does not match last operation`);
+			}
 			return cognitoClient
 				.adminUpdateUserAttributes({
-					UserAttributes: [{ Name: 'custom:credit', Value: newCredit }],
+					UserAttributes: [{ Name: 'custom:transcription_state', Value: 'error' }],
 					UserPoolId: process.env.COGNITO_POOL_ID,
 					Username: userId,
 				})
 				.then(() => {
-					user['custom:credit'] = newCredit;
+					user['custom:transcription_state'] = 'error';
 					return user;
 				});
 		});
 	}
 
-	return { findById, addCreditFromOrder, changeCredit };
+	async function finishTranscription(userId, operationId) {
+		return findById(userId).then(user => {
+			const pendingOpId = user['custom:transcription_op'];
+			const opState = user['custom:transcription_state'];
+			const credit = Number(user['custom:credit'] || 0);
+			const cost = Number(user['custom:transcription_cost']);
+
+			if (opState !== 'pending') {
+				throw new BadRequestError('Cannot finish transcription, operation already finished');
+			}
+			if (pendingOpId !== operationId) {
+				throw new BadRequestError(`Op ${operationId} does not match last operation`);
+			}
+			const newCredit = (credit - cost).toFixed(2);
+			return cognitoClient
+				.adminUpdateUserAttributes({
+					UserAttributes: [
+						{ Name: 'custom:credit', Value: newCredit },
+						{ Name: 'custom:transcription_state', Value: 'success' },
+					],
+					UserPoolId: process.env.COGNITO_POOL_ID,
+					Username: userId,
+				})
+				.then(() => {
+					user['custom:credit'] = newCredit;
+					user['custom:transcription_state'] = 'success';
+					return user;
+				});
+		});
+	}
+
+	return { findById, addCreditFromOrder, getCredit, initTranscription, finishTranscription, failTranscription };
 };
