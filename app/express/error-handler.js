@@ -2,8 +2,6 @@ const Sentry = require('@sentry/node');
 const { UnauthorizedError: JwtUnauthorizedError } = require('express-jwt');
 const { BadRequestError, ForbiddenError, NotFoundError, ServerError, UnauthorizedError } = require('../errors');
 
-Sentry.init({ dsn: process.env.SENTRY_DSN });
-
 // eslint-disable-next-line no-unused-vars
 module.exports = (err, req, res, next) => {
 	Sentry.captureException(err);
