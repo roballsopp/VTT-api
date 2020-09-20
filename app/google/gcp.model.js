@@ -1,24 +1,45 @@
 const moment = require('moment');
 const { Storage } = require('@google-cloud/storage');
 const { SpeechClient } = require('@google-cloud/speech');
-const { google } = require('googleapis');
 const { ServerError } = require('../errors');
+const wave = require('../wave');
 
 const speech = new SpeechClient();
 
 const storage = new Storage();
 const audioBucket = storage.bucket(process.env.AUDIO_BUCKET);
 
-function getSignedUrl(filename) {
+const SPEECH_TO_TEXT_COST_PER_MINUTE = 0.15; // $0.15 per minute
+
+async function getSignedUrl(filename) {
 	const file = audioBucket.file(filename);
 
-	return file.getSignedUrl({
+	const [url] = await file.getSignedUrl({
 		action: 'write',
 		version: 'v4',
 		expires: moment()
 			.add(10, 'minutes')
 			.toISOString(),
 	});
+
+	return url;
+}
+
+async function getFileBytes(filename, start, end) {
+	const file = audioBucket.file(filename);
+	const readable = await file.createReadStream({ start, end });
+	const chunks = [];
+	for await (let chunk of readable) {
+		chunks.push(chunk);
+	}
+	return Buffer.concat(chunks);
+}
+
+async function getSpeechToTextCost(filename) {
+	// data chunk could appear anywhere, but its probably within the first kb.
+	const { duration } = await getFileBytes(filename, { start: 0, end: 1024 }).then(wave.getInfo);
+	// round up to next whole cent
+	return Math.ceil((duration / 60) * SPEECH_TO_TEXT_COST_PER_MINUTE * 100) / 100;
 }
 
 async function deleteFile(filename) {
@@ -45,26 +66,21 @@ async function initSpeechToTextOp(filename, options = {}) {
 }
 
 async function getSpeechToTextOp(name) {
-	// using the cloud speech api isn't super easy, but this method is: https://github.com/googleapis/nodejs-speech/issues/10#issuecomment-415900469
-	const auth = await google.auth.getClient({
-		scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-	});
-	const { data } = await google.speech('v1').operations.get({ auth, name });
-	// documentation for operations response: https://cloud.google.com/speech-to-text/docs/reference/rest/v1/operations
-	// documentation for the response.results field (determined by the speech to text api in this case) https://cloud.google.com/speech-to-text/docs/basics#responses
-	const { done, response, error } = data;
+	// The not very descriptive api documentation: https://googleapis.dev/nodejs/speech/latest/v1.SpeechClient.html#checkLongRunningRecognizeProgress
+	// Slightly more illuminating: https://cloud.google.com/speech-to-text/docs/reference/rest/v1/operations
+	const { done = false, error, result } = await speech.checkLongRunningRecognizeProgress(name);
 
 	if (error) {
 		console.error('OP ERROR', error.details);
 		throw new ServerError(error.message);
 	}
-	if (response) {
-		return { done, results: response.results };
+	if (result) {
+		return { done: done || false, results: result.results };
 	}
-	return { done };
+	return { done: done || false };
 }
 
-function getLanuageCodes() {
+function getLanguageCodes() {
 	return [
 		{ value: 'en-US', display: 'English (American)' },
 		{ value: 'en-GB', display: 'English (British)' },
@@ -79,10 +95,13 @@ function getLanuageCodes() {
 	];
 }
 
-module.exports = {
-	getSignedUrl,
-	deleteFile,
-	initSpeechToTextOp,
-	getSpeechToTextOp,
-	getLanuageCodes,
+module.exports = function createGCPModel() {
+	return {
+		getSignedUrl,
+		getSpeechToTextCost,
+		deleteFile,
+		initSpeechToTextOp,
+		getSpeechToTextOp,
+		getLanguageCodes,
+	};
 };

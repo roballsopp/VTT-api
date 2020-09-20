@@ -1,19 +1,14 @@
-const express = require('express');
-const cors = require('cors');
+const { GraphQLSchema } = require('graphql');
+const Sentry = require('@sentry/node');
+const { createServer } = require('./express');
+const createModels = require('./models');
+const gqlQueries = require('./root-query.graphql');
+const gqlMutations = require('./root-mutaton.graphql');
 
-const { requestLogger, createRoutes, errorHandler } = require('./express');
+Sentry.init({ dsn: process.env.SENTRY_DSN });
 
-const app = express();
-
-app.use(cors({ origin: new RegExp(`${process.env.CORS_ORIGIN}$`), methods: ['GET', 'POST', 'DELETE'] }));
-app.use(express.json());
-
-app.use(requestLogger);
-
-app.get('/health', (req, res) => res.status(200).json({ status: 'Ok' }));
-
-createRoutes(app);
-
-app.use(errorHandler);
+const graphqlSchema = new GraphQLSchema({ query: gqlQueries, mutation: gqlMutations });
+const models = createModels();
+const app = createServer(graphqlSchema, models);
 
 app.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}`));
