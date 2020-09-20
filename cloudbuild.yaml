@@ -1,7 +1,7 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/vtt-creator-api', '.']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/${_IMG_NAME}', '.']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/vtt-creator-api']
+    args: ['push', 'gcr.io/$PROJECT_ID/${_IMG_NAME}']
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['run', 'deploy', '${_SERVICE_NAME}', '--image', 'gcr.io/$PROJECT_ID/vtt-creator-api', '--region', '${_SERVICE_REGION}', '--platform', 'managed', '--allow-unauthenticated']
+    args: ['run', 'deploy', '${_SERVICE_NAME}', '--image', 'gcr.io/$PROJECT_ID/${_IMG_NAME}', '--region', '${_SERVICE_REGION}', '--platform', 'managed', '--allow-unauthenticated']
