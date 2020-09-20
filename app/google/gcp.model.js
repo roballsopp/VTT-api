@@ -38,7 +38,8 @@ async function getFileBytes(filename, start, end) {
 async function getSpeechToTextCost(filename) {
 	// data chunk could appear anywhere, but its probably within the first kb.
 	const { duration } = await getFileBytes(filename, { start: 0, end: 1024 }).then(wave.getInfo);
-	return Math.round((duration / 60) * SPEECH_TO_TEXT_COST_PER_MINUTE * 100) / 100;
+	// round up to next whole cent
+	return Math.ceil((duration / 60) * SPEECH_TO_TEXT_COST_PER_MINUTE * 100) / 100;
 }
 
 async function deleteFile(filename) {
