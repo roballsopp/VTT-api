@@ -9,7 +9,7 @@ const speech = new SpeechClient();
 const storage = new Storage();
 const audioBucket = storage.bucket(process.env.AUDIO_BUCKET);
 
-const SPEECH_TO_TEXT_COST_PER_MINUTE = 0.1; // $0.10 per minute
+const SPEECH_TO_TEXT_COST_PER_MINUTE = 0.15; // $0.15 per minute
 
 async function getSignedUrl(filename) {
 	const file = audioBucket.file(filename);
