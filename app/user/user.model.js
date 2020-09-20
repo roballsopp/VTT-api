@@ -26,40 +26,35 @@ module.exports = function createUserModel({ paypalModel }) {
 	}
 
 	function addCreditFromOrder(userId, orderId) {
-		return paypalModel
-			.getAccessToken()
-			.then(({ access_token }) => {
-				return Promise.all([findById(userId), paypalModel.getOrder(orderId, access_token)]);
-			})
-			.then(([user, order]) => {
-				const orderAmt = Number(order.purchase_units[0].amount.value);
-				if (Number.isNaN(orderAmt)) {
-					throw new ServerError(`Expected a number from paypal, but got ${order.purchase_units[0].amount.value}`);
-				}
-				const orderDate = new Date(order.create_time);
-				const currentCredit = Number(user['custom:credit'] || 0);
-				const lastOrderDate = new Date(user['custom:last_order_date'] || '1970-01-01');
-				if (lastOrderDate >= orderDate) {
-					throw new BadRequestError(`Can't add credit from old order`);
-				}
-				const newCredit = (orderAmt + currentCredit).toFixed(2);
-				return cognitoClient
-					.adminUpdateUserAttributes({
-						UserAttributes: [
-							{ Name: 'custom:credit', Value: newCredit },
-							{ Name: 'custom:last_order_date', Value: orderDate.toISOString() },
-							{ Name: 'custom:last_order_id', Value: order.id },
-						],
-						UserPoolId: process.env.COGNITO_POOL_ID,
-						Username: userId,
-					})
-					.then(() => {
-						user['custom:credit'] = newCredit;
-						user['custom:last_order_date'] = orderDate.toISOString();
-						user['custom:last_order_id'] = order.id;
-						return user;
-					});
-			});
+		return Promise.all([findById(userId), paypalModel.getOrder(orderId)]).then(([user, order]) => {
+			const orderAmt = Number(order.purchase_units[0].amount.value);
+			if (Number.isNaN(orderAmt)) {
+				throw new ServerError(`Expected a number from paypal, but got ${order.purchase_units[0].amount.value}`);
+			}
+			const orderDate = new Date(order.create_time);
+			const currentCredit = Number(user['custom:credit'] || 0);
+			const lastOrderDate = new Date(user['custom:last_order_date'] || '1970-01-01');
+			if (lastOrderDate >= orderDate) {
+				throw new BadRequestError(`Can't add credit from old order`);
+			}
+			const newCredit = (orderAmt + currentCredit).toFixed(2);
+			return cognitoClient
+				.adminUpdateUserAttributes({
+					UserAttributes: [
+						{ Name: 'custom:credit', Value: newCredit },
+						{ Name: 'custom:last_order_date', Value: orderDate.toISOString() },
+						{ Name: 'custom:last_order_id', Value: order.id },
+					],
+					UserPoolId: process.env.COGNITO_POOL_ID,
+					Username: userId,
+				})
+				.then(() => {
+					user['custom:credit'] = newCredit;
+					user['custom:last_order_date'] = orderDate.toISOString();
+					user['custom:last_order_id'] = order.id;
+					return user;
+				});
+		});
 	}
 
 	function initTranscription(userId, operationId, fileName, cost) {
