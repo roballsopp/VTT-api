@@ -1,13 +1,14 @@
 const { UnauthorizedError, BadRequestError, ServerError } = require('../errors');
 const { CognitoIdentityProvider } = require('@aws-sdk/client-cognito-identity-provider');
+const { COGNITO_POOL_ID, COGNITO_POOL_REGION } = require('../config');
 
-const cognitoClient = new CognitoIdentityProvider({ region: process.env.COGNITO_POOL_REGION });
+const cognitoClient = new CognitoIdentityProvider({ region: COGNITO_POOL_REGION });
 
 module.exports = function createUserModel({ paypalModel }) {
 	async function findById(userId) {
 		try {
 			const results = await cognitoClient.adminGetUser({
-				UserPoolId: process.env.COGNITO_POOL_ID,
+				UserPoolId: COGNITO_POOL_ID,
 				Username: userId, // cognito user id is named username
 			});
 			return results.UserAttributes.reduce((user, att) => {
@@ -45,7 +46,7 @@ module.exports = function createUserModel({ paypalModel }) {
 						{ Name: 'custom:last_order_date', Value: orderDate.toISOString() },
 						{ Name: 'custom:last_order_id', Value: order.id },
 					],
-					UserPoolId: process.env.COGNITO_POOL_ID,
+					UserPoolId: COGNITO_POOL_ID,
 					Username: userId,
 				})
 				.then(() => {
@@ -64,7 +65,7 @@ module.exports = function createUserModel({ paypalModel }) {
 			return cognitoClient
 				.adminUpdateUserAttributes({
 					UserAttributes: [{ Name: 'custom:credit', Value: newCredit }],
-					UserPoolId: process.env.COGNITO_POOL_ID,
+					UserPoolId: COGNITO_POOL_ID,
 					Username: userId,
 				})
 				.then(() => {

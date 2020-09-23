@@ -1,0 +1,18 @@
+const AUDIO_BUCKET = process.env.AUDIO_BUCKET;
+const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
+const COGNITO_POOL_ID = process.env.COGNITO_POOL_ID;
+const COGNITO_POOL_REGION = process.env.COGNITO_POOL_REGION;
+const SPEECH_TO_TEXT_COST_PER_MINUTE = Number(process.env.SPEECH_TO_TEXT_COST_PER_MINUTE); // dollars per minute
+
+if (Number.isNaN(SPEECH_TO_TEXT_COST_PER_MINUTE)) throw new Error('Bad SPEECH_TO_TEXT_COST_PER_MINUTE variable');
+
+const GET_TOTAL_S2T_JOB_COST = duration => Math.ceil((duration / 60) * SPEECH_TO_TEXT_COST_PER_MINUTE * 100) / 100;
+
+module.exports = {
+	AUDIO_BUCKET,
+	COGNITO_CLIENT_ID,
+	COGNITO_POOL_ID,
+	COGNITO_POOL_REGION,
+	SPEECH_TO_TEXT_COST_PER_MINUTE,
+	GET_TOTAL_S2T_JOB_COST,
+};
