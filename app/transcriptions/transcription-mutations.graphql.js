@@ -3,6 +3,7 @@ const { GraphQLNonNull, GraphQLObjectType, GraphQLString } = require('graphql');
 const { ForbiddenError } = require('../errors');
 const { TranscriptionJobType } = require('./transcription.graphql');
 const { UserType } = require('../user');
+const { GET_TOTAL_S2T_JOB_COST } = require('../config');
 
 module.exports = {
 	beginTranscription: {
@@ -28,10 +29,12 @@ module.exports = {
 		resolve: async (_, args, ctx) => {
 			const { filename, languageCode } = args;
 
-			const [cost, credit] = await Promise.all([
-				ctx.models.gcp.getSpeechToTextCost(filename),
+			const [{ duration }, credit] = await Promise.all([
+				ctx.models.gcp.getAudioInfo(filename),
 				ctx.models.user.getCredit(ctx.user['cognito:username']),
 			]);
+
+			const cost = GET_TOTAL_S2T_JOB_COST(duration);
 
 			if (cost > credit) throw new ForbiddenError('Cannot afford job');
 
@@ -40,7 +43,7 @@ module.exports = {
 				options.languageCode = languageCode;
 			}
 			const operationId = await ctx.models.gcp.initSpeechToTextOp(filename, options);
-			const job = await ctx.models.transcription.create(ctx.user['cognito:username'], operationId, filename, cost);
+			const job = await ctx.models.transcription.create(ctx.user['cognito:username'], operationId, filename, duration);
 
 			return { job, operationId };
 		},

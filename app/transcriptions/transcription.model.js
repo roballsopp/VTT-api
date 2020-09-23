@@ -1,4 +1,5 @@
 const { ForbiddenError, BadRequestError } = require('../errors');
+const { SPEECH_TO_TEXT_COST_PER_MINUTE, GET_TOTAL_S2T_JOB_COST } = require('../config');
 
 module.exports = function createTranscriptionModel({ sequelize }) {
 	const transcriptionJobsTable = sequelize.model('transcriptionJobs');
@@ -11,14 +12,16 @@ module.exports = function createTranscriptionModel({ sequelize }) {
 		return transcriptionJobsTable.findOne({ where: { userId, operationId, state: 'pending' } });
 	}
 
-	async function create(userId, operationId, fileKey, cost) {
+	async function create(userId, operationId, fileKey, fileDuration) {
 		if (!userId) throw new ForbiddenError('Missing session user.');
 		return transcriptionJobsTable.create({
 			userId,
 			operationId,
 			state: 'pending',
 			fileKey,
-			cost,
+			fileDuration,
+			pricePerMin: SPEECH_TO_TEXT_COST_PER_MINUTE,
+			cost: GET_TOTAL_S2T_JOB_COST(fileDuration),
 		});
 	}
 

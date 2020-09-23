@@ -14,6 +14,8 @@ class TranscriptionJob extends Sequelize.Model {
 				operationId: { type: Sequelize.STRING, allowNull: false },
 				state: { type: Sequelize.STRING, allowNull: false },
 				fileKey: { type: Sequelize.STRING, allowNull: false },
+				fileDuration: { type: Sequelize.FLOAT, allowNull: false },
+				pricePerMin: { type: Sequelize.FLOAT, allowNull: false },
 				cost: { type: Sequelize.FLOAT, allowNull: false },
 			},
 			{
