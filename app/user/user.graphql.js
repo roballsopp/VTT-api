@@ -16,11 +16,5 @@ module.exports.UserType = new GraphQLObjectType({
 		emailVerified: { type: GraphQLNonNull(GraphQLBoolean), resolve: u => u.email_verified === 'true' },
 		credit: { type: GraphQLNonNull(GraphQLFloat), resolve: u => Number(u['custom:credit'] || 0) },
 		lastOrderDate: { type: GraphQLDateTime, resolve: u => u['custom:last_order_date'] },
-		lastTranscriptionOp: { type: GraphQLString, resolve: u => u['custom:transcription_op'] },
-		transcriptionState: {
-			type: GraphQLString,
-			description: 'Can be either `success`, `error`, or `pending`',
-			resolve: u => u['custom:transcription_state'],
-		},
 	}),
 });

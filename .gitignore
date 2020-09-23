@@ -4,3 +4,4 @@ node_modules/
 gcp_credentials.json
 docker-compose.yaml
 yarn-error.log
+data/
