@@ -8,7 +8,12 @@
     "lint-fix": "eslint \"{./**/*.js,}\" --fix",
     "start": "node ./app/index.js",
     "dev": "nodemon ./app/index.js",
-    "test": "mocha"
+    "test": "mocha",
+    "migration:generate": "sequelize migration:generate",
+    "migrate": "sequelize db:migrate",
+    "migrate:undo": "sequelize db:migrate:undo",
+    "seed:generate": "sequelize seed:generate",
+    "seed:all": "sequelize db:seed:all"
   },
   "author": "",
   "license": "ISC",
@@ -26,7 +31,11 @@
     "graphql-iso-date": "^3.6.1",
     "jwks-rsa": "^1.9.0",
     "moment": "^2.24.0",
-    "qs": "^6.9.4"
+    "pg": "^8.3.3",
+    "pg-hstore": "^2.3.3",
+    "qs": "^6.9.4",
+    "sequelize": "^6.3.5",
+    "sequelize-cli": "^6.2.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",

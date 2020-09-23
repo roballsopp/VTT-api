@@ -1,6 +1,19 @@
 steps:
+  - name: alpine:3.12
+    entrypoint: sh
+    dir: 'cloudsql'
+    args:
+      - -c
+      - 'wget -O cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.linux.386 && chmod +x cloud_sql_proxy'
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/${_IMG_NAME}', '.']
+    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/${_IMG_NAME}', '.' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/${_IMG_NAME}', '.' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: sh
+    args:
+      - -c
+      - '(cloudsql/cloud_sql_proxy -dir=/workspace/cloudsql -instances=${_SQL_INSTANCE_NAME} & sleep 2) && docker run -v /workspace/cloudsql:/cloudsql/ --env PG_HOST=/cloudsql/${_SQL_INSTANCE_NAME} --env PG_USER=${_PG_USER} --env PG_PWD=${_PG_PWD} --env PG_DATABASE=${_PG_DATABASE} gcr.io/$PROJECT_ID/${_IMG_NAME} ${_MIGRATION_CMD}'
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/${_IMG_NAME}']
   - name: 'gcr.io/cloud-builders/gcloud'
