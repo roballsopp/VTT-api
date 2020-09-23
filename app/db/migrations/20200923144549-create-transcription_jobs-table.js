@@ -14,7 +14,7 @@ module.exports = {
 				created_at timestamp with time zone NOT NULL DEFAULT now(),
 				updated_at timestamp with time zone NOT NULL DEFAULT now(),
 				CONSTRAINT transcription_jobs_pkey PRIMARY KEY (id),
-				UNIQUE transcription_jobs_user_id_operation_id_uidx (user_id, operation_id)
+				CONSTRAINT transcription_jobs_user_id_operation_id_uidx UNIQUE (user_id, operation_id)
 			);
 		`);
 	},
