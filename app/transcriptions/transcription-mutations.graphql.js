@@ -29,14 +29,14 @@ module.exports = {
 		resolve: async (_, args, ctx) => {
 			const { filename, languageCode } = args;
 
-			const [{ duration }, credit] = await Promise.all([
+			const [{ duration }, user] = await Promise.all([
 				ctx.models.gcp.getAudioInfo(filename),
-				ctx.models.user.getCredit(ctx.user['cognito:username']),
+				ctx.models.user.findById(ctx.user['cognito:username']),
 			]);
 
 			const cost = GET_TOTAL_S2T_JOB_COST(duration);
 
-			if (cost > credit) throw new ForbiddenError('Cannot afford job');
+			if (cost > user.credit && !user.unlimitedUsage) throw new ForbiddenError('Cannot afford job');
 
 			const options = {};
 			if (languageCode) {

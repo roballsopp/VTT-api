@@ -11,19 +11,15 @@ module.exports = function createUserModel({ paypalModel }) {
 				UserPoolId: COGNITO_POOL_ID,
 				Username: userId, // cognito user id is named username
 			});
-			return results.UserAttributes.reduce((user, att) => {
+			const cognitoAttr = results.UserAttributes.reduce((user, att) => {
 				user[att.Name] = att.Value;
 				return user;
 			}, {});
+			return new User(cognitoAttr);
 		} catch (err) {
 			console.error(err);
 			throw new UnauthorizedError(err);
 		}
-	}
-
-	async function getCredit(userId) {
-		const user = await findById(userId);
-		return Number(user['custom:credit'] || 0);
 	}
 
 	function addCreditFromOrder(userId, orderId) {
@@ -33,12 +29,10 @@ module.exports = function createUserModel({ paypalModel }) {
 				throw new ServerError(`Expected a number from paypal, but got ${order.purchase_units[0].amount.value}`);
 			}
 			const orderDate = new Date(order.create_time);
-			const currentCredit = Number(user['custom:credit'] || 0);
-			const lastOrderDate = new Date(user['custom:last_order_date'] || '1970-01-01');
-			if (lastOrderDate >= orderDate) {
+			if (user.lastOrderDate >= orderDate) {
 				throw new BadRequestError(`Can't add credit from old order`);
 			}
-			const newCredit = (orderAmt + currentCredit).toFixed(2);
+			const newCredit = (orderAmt + user.credit).toFixed(2);
 			return cognitoClient
 				.adminUpdateUserAttributes({
 					UserAttributes: [
@@ -50,9 +44,9 @@ module.exports = function createUserModel({ paypalModel }) {
 					Username: userId,
 				})
 				.then(() => {
-					user['custom:credit'] = newCredit;
-					user['custom:last_order_date'] = orderDate.toISOString();
-					user['custom:last_order_id'] = order.id;
+					user.credit = newCredit;
+					user.lastOrderDate = orderDate.toISOString();
+					user.lastOrderId = order.id;
 					return user;
 				});
 		});
@@ -60,8 +54,8 @@ module.exports = function createUserModel({ paypalModel }) {
 
 	async function applyTranscriptionFee(userId, fee) {
 		return findById(userId).then(user => {
-			const credit = Number(user['custom:credit'] || 0);
-			const newCredit = (credit - fee).toFixed(2);
+			if (user.unlimitedUsage) return user;
+			const newCredit = (user.credit - fee).toFixed(2);
 			return cognitoClient
 				.adminUpdateUserAttributes({
 					UserAttributes: [{ Name: 'custom:credit', Value: newCredit }],
@@ -69,11 +63,23 @@ module.exports = function createUserModel({ paypalModel }) {
 					Username: userId,
 				})
 				.then(() => {
-					user['custom:credit'] = newCredit;
+					user.credit = newCredit;
 					return user;
 				});
 		});
 	}
 
-	return { findById, addCreditFromOrder, getCredit, applyTranscriptionFee };
+	return { findById, addCreditFromOrder, applyTranscriptionFee };
 };
+
+class User {
+	constructor(cognitoUser) {
+		this.id = cognitoUser.sub;
+		this.email = cognitoUser.email;
+		this.emailVerified = cognitoUser.email_verified === 'true';
+		this.credit = Number(cognitoUser['custom:credit'] || 0);
+		this.unlimitedUsage = cognitoUser['custom:unlimited_usage'] === '1';
+		this.lastOrderDate = new Date(cognitoUser['custom:last_order_date'] || '1970-01-01');
+		this.lastOrderId = cognitoUser['custom:last_order_id'];
+	}
+}
