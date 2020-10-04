@@ -12,16 +12,20 @@ module.exports = (err, req, res, next) => {
 	const stack = getStackTraceFromError(err);
 	const statusCode = getStatusCodeFromError(err);
 
-	console.error(
-		JSON.stringify({
-			severity: 'error',
-			message: `${statusCode} - ${req.method} ${req.originalUrl} - ${err.message}`,
-			headers: req.headers,
-			body: req.body,
-			query: req.query,
-			stack,
-		})
-	);
+	const errorInfo = {
+		severity: 'error',
+		message: `${statusCode} - ${req.method} ${req.originalUrl} - ${err.message}`,
+		headers: req.headers,
+		body: req.body,
+		query: req.query,
+		stack,
+	};
+
+	if (process.env.NODE_ENV === 'production') {
+		console.error(JSON.stringify(errorInfo));
+	} else {
+		console.error(errorInfo);
+	}
 
 	res.status(statusCode).json({ message: err.message, stack });
 };
