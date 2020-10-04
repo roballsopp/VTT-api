@@ -8,7 +8,7 @@
     "lint-fix": "eslint \"{./**/*.js,}\" --fix",
     "start": "node ./app/index.js",
     "dev": "nodemon ./app/index.js",
-    "test": "mocha",
+    "test": "mocha --exit",
     "migration:generate": "sequelize migration:generate",
     "migrate": "sequelize db:migrate",
     "migrate:undo": "sequelize db:migrate:undo",
@@ -42,8 +42,9 @@
     "eslint": "^6.7.2",
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-prettier": "^3.0.1",
-    "mocha": "^6.1.4",
+    "mocha": "^8.1.3",
     "nodemon": "^1.18.11",
-    "prettier": "^1.17.0"
+    "prettier": "^1.17.0",
+    "supertest": "^5.0.0"
   }
 }
