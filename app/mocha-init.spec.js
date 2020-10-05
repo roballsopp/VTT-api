@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const { GraphQLSchema } = require('graphql');
+const chai = require('chai');
 const { CognitoIdentityProvider } = require('@aws-sdk/client-cognito-identity-provider');
 const { createServer } = require('./express');
 const createModels = require('./models');
@@ -9,6 +10,8 @@ const gqlMutations = require('./root-mutaton.graphql');
 const { COGNITO_POOL_ID, COGNITO_CLIENT_SECRET, COGNITO_CLIENT_ID, COGNITO_POOL_REGION } = require('./config');
 
 const cognitoClient = new CognitoIdentityProvider({ region: COGNITO_POOL_REGION });
+
+chai.use(require('chai-spies'));
 
 before(async function() {
 	const testUserEmail = 'testy@mc-tester.com';
