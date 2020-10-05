@@ -24,7 +24,7 @@ before(async function() {
 		console.warn(e);
 	}
 
-	await cognitoClient.adminCreateUser({
+	const { User } = await cognitoClient.adminCreateUser({
 		UserPoolId: COGNITO_POOL_ID,
 		Username: testUserEmail,
 		UserAttributes: [
@@ -61,6 +61,14 @@ before(async function() {
 		},
 	});
 
+	function updateTestUser(attributes) {
+		return cognitoClient.adminUpdateUserAttributes({
+			UserAttributes: Object.entries(attributes).map(([k, Value]) => ({ Name: `custom:${k}`, Value })),
+			UserPoolId: COGNITO_POOL_ID,
+			Username: User.Username,
+		});
+	}
+
 	const graphqlSchema = new GraphQLSchema({ query: gqlQueries, mutation: gqlMutations });
 
 	this.sequelize = await connectToDb({
@@ -77,7 +85,9 @@ before(async function() {
 		return createServer(graphqlSchema, { ...this.models, ...modelOverrides });
 	};
 
+	this.testUserId = User.Username;
 	this.testUserEmail = testUserEmail;
 	this.testUserPassword = testUserPassword;
 	this.testUserToken = AuthenticationResult.IdToken;
+	this.updateTestUser = updateTestUser;
 });
