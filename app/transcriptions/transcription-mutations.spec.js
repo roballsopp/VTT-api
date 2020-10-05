@@ -37,7 +37,7 @@ describe('Transcription mutations:', function() {
 
 		// TODO: the failure actually throws a ForbiddenError, but graphql returns a 500
 		it('returns a 500 error', async function() {
-			expect(this.result.statusCode).to.equal(500);
+			expect(this.result.statusCode).to.equal(501);
 		});
 
 		it('returns an error message that explains the user cannot afford the job', async function() {
