@@ -32,6 +32,8 @@ jobs:
           name: Installing Dependencies
           command: yarn install
       - save_cache:
+          paths:
+            - node_modules
           key: v1-dependencies-{{ checksum "yarn.lock" }}
       - run:
           name: Wait for db
