@@ -1,8 +1,8 @@
 const request = require('supertest');
 const { expect, assert, spy } = require('chai');
 
-describe('beginTranscription mutation', function() {
-	describe('when the user cannot afford the job', function() {
+describe('Transcription mutations:', function() {
+	describe('beginTranscription, when the user cannot afford the job', function() {
 		before(async function() {
 			this.expectedOpId = '09867';
 			this.expectedDuration = 20;
@@ -36,17 +36,17 @@ describe('beginTranscription mutation', function() {
 		});
 
 		// TODO: the failure actually throws a ForbiddenError, but graphql returns a 500
-		it('a 500 error is returned', async function() {
+		it('returns a 500 error', async function() {
 			expect(this.result.statusCode).to.equal(500);
 		});
 
-		it('the error message explains the user cannot afford the job', async function() {
+		it('returns an error message that explains the user cannot afford the job', async function() {
 			expect(this.result.body.errors).to.have.lengthOf(1);
 			expect(this.result.body.errors[0].message).to.equal('Cannot afford job');
 		});
 	});
 
-	describe('when the user can afford the job', function() {
+	describe('beginTranscription, when the user can afford the job', function() {
 		before(async function() {
 			await this.sequelize.model('transcriptionJobs').destroy({ where: {} });
 
@@ -122,7 +122,7 @@ describe('beginTranscription mutation', function() {
 			expect(this.beginResult.job.user.credit).to.equal(10);
 		});
 
-		describe('then, when the user finishes the transcription', function() {
+		describe('finishTranscription', function() {
 			before(async function() {
 				const { statusCode, body } = await request(this.server)
 					.post('/graphql')
@@ -186,7 +186,7 @@ describe('beginTranscription mutation', function() {
 		});
 	});
 
-	describe('when the user has an unlimited usage account', function() {
+	describe('beginTranscription, when the user has an unlimited usage account', function() {
 		before(async function() {
 			await this.sequelize.model('transcriptionJobs').destroy({ where: {} });
 
@@ -260,7 +260,7 @@ describe('beginTranscription mutation', function() {
 			expect(this.beginResult.job.user.credit).to.equal(0);
 		});
 
-		describe('then, when the user finishes the transcription', function() {
+		describe('finishTranscription', function() {
 			before(async function() {
 				const { statusCode, body } = await request(this.server)
 					.post('/graphql')
