@@ -39,5 +39,8 @@ jobs:
           name: Wait for db
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
       - run:
+          name: Running Migrations
+          command: yarn migrate
+      - run:
           name: Running Tests
           command: yarn test
