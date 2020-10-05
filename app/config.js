@@ -1,3 +1,4 @@
+const REQUEST_LOGGING = process.env.REQUEST_LOGGING === 'true';
 const AUDIO_BUCKET = process.env.AUDIO_BUCKET;
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
 const COGNITO_CLIENT_SECRET = process.env.COGNITO_CLIENT_SECRET;
@@ -10,6 +11,7 @@ if (Number.isNaN(SPEECH_TO_TEXT_COST_PER_MINUTE)) throw new Error('Bad SPEECH_TO
 const GET_TOTAL_S2T_JOB_COST = duration => Math.ceil((duration / 60) * SPEECH_TO_TEXT_COST_PER_MINUTE * 100) / 100;
 
 module.exports = {
+	REQUEST_LOGGING,
 	AUDIO_BUCKET,
 	COGNITO_CLIENT_ID,
 	COGNITO_CLIENT_SECRET,

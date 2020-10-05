@@ -5,13 +5,30 @@ module.exports = (req, res, next) => {
 				severity: 'info',
 				message: `${req.method} ${req.originalUrl}`,
 				headers: req.headers,
-				body: req.body,
+				body: cleanupGql(req.path, req.body),
 				query: req.query,
 			})
 		);
 	} else {
-		console.log(`${req.method} ${req.originalUrl}`, 'body:', req.body, 'query:', req.query, 'headers:', req.headers);
+		console.log(
+			`${req.method} ${req.originalUrl}`,
+			'body:',
+			cleanupGql(req.path, req.body),
+			'query:',
+			req.query,
+			'headers:',
+			req.headers
+		);
 	}
 
 	next();
 };
+
+function cleanupGql(path, body) {
+	if (path === '/graphql') {
+		return {
+			...body,
+			query: body.query.replace(/\s+/g, ' '),
+		};
+	}
+}
