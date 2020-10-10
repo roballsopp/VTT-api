@@ -80,15 +80,17 @@ async function getSpeechToTextOp(name) {
 function getLanguageCodes() {
 	return [
 		{ value: 'en-US', display: 'English (American)' },
+		{ value: 'en-AU', display: 'English (Australia)' },
 		{ value: 'en-GB', display: 'English (British)' },
 		{ value: 'en-CA', display: 'English (Canada)' },
-		{ value: 'en-AU', display: 'English (Australia)' },
-		{ value: 'es-MX', display: 'Español (México)' },
+		{ value: 'en-IE', display: 'English (Ireland)' },
 		{ value: 'es-ES', display: 'Español (España)' },
+		{ value: 'es-MX', display: 'Español (México)' },
 		{ value: 'fr-FR', display: 'French' },
 		{ value: 'de-DE', display: 'German' },
 		{ value: 'hi-IN', display: 'Hindi' },
 		{ value: 'it-IT', display: 'Italian' },
+		{ value: 'ja-JP', display: 'Japanese' },
 	];
 }
 
