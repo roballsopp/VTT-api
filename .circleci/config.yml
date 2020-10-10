@@ -1,0 +1,46 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: node:14
+        environment:
+          NODE_ENV: development
+          CORS_ORIGIN: http://localhost:3000
+          PG_DATABASE: vtt_creator
+          PG_USER: postgres
+          PG_PWD: password
+          PG_HOST: localhost
+          SPEECH_TO_TEXT_COST_PER_MINUTE: 0.15
+      - image: postgres:12.4-alpine
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: vtt_creator
+          POSTGRES_PASSWORD: password
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Install dockerize
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.3.0
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "yarn.lock" }}
+            - v1-dependencies-
+      - run:
+          name: Installing Dependencies
+          command: yarn install
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "yarn.lock" }}
+      - run:
+          name: Wait for db
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
+          name: Running Migrations
+          command: yarn migrate
+      - run:
+          name: Running Tests
+          command: yarn test

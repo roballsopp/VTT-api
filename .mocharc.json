@@ -1,4 +1,5 @@
 {
   "extension": ["js"],
-  "spec": "./app/**/*.spec.js"
+  "spec": "./app/**/*.spec.js",
+  "timeout": 8000
 }
