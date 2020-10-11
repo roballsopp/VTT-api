@@ -3,7 +3,7 @@ const { Storage } = require('@google-cloud/storage');
 const { SpeechClient } = require('@google-cloud/speech');
 const { ServerError } = require('../errors');
 const wave = require('../wave');
-const { SPEECH_TO_TEXT_COST_PER_MINUTE, AUDIO_BUCKET } = require('../config');
+const { AUDIO_BUCKET } = require('../config');
 
 const speech = new SpeechClient();
 
