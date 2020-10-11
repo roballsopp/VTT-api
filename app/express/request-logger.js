@@ -1,3 +1,5 @@
+const { GCP_PROJECT } = require('../config');
+
 module.exports = (req, res, next) => {
 	const reqStart = new Date();
 
@@ -9,6 +11,14 @@ module.exports = (req, res, next) => {
 		query: req.query,
 		reqStart: reqStart.toISOString(),
 	};
+
+	// correlate my logs with the automatic ones created by cloud run: https://cloud.google.com/run/docs/logging#correlate-logs
+	const traceHeader = req.header('X-Cloud-Trace-Context');
+
+	if (traceHeader && GCP_PROJECT) {
+		const [trace] = traceHeader.split('/');
+		reqInfo['logging.googleapis.com/trace'] = `projects/${GCP_PROJECT}/traces/${trace}`;
+	}
 
 	res.once('close', () => {
 		const reqEnd = new Date();
