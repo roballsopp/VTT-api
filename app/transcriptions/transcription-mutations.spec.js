@@ -183,6 +183,159 @@ describe('Transcription mutations:', function() {
 			it('cleans up the transcription file when done', async function() {
 				expect(this.mockGcpModel.deleteFile).to.have.been.called.with(this.expectedFilename);
 			});
+
+			describe('failTranscription, when the job is already complete', function() {
+				before(async function() {
+					this.result = await request(this.server)
+						.post('/graphql')
+						.send({
+							query: `mutation failTranscription($operationId: String!) {
+							failTranscription(operationId: $operationId) {
+								job {
+									id
+									fileKey
+									cost
+									createdAt
+									operationId
+									state
+									user {
+										id
+										credit
+									}
+								}
+							}
+						}`,
+							variables: { operationId: this.expectedOpId },
+						})
+						.set('Authorization', `Bearer ${this.testUserToken}`);
+				});
+
+				// TODO: the failure actually throws a BadRequestError, but graphql returns a 500
+				it('returns a 500 error', async function() {
+					expect(this.result.statusCode).to.equal(500);
+				});
+
+				it('returns an error message that explains there is no pending job with the given op id', async function() {
+					expect(this.result.body.errors).to.have.lengthOf(1);
+					expect(this.result.body.errors[0].message).to.equal(
+						`Cannot fail transcription, no pending job found for user: ${this.testUserId} and operation ${this.expectedOpId}`
+					);
+				});
+			});
+		});
+	});
+
+	describe('beginTranscription, when the user can afford the job, but the job is destined to fail', function() {
+		before(async function() {
+			await this.sequelize.model('transcriptionJobs').destroy({ where: {} });
+
+			this.expectedOpId = '09867';
+			this.expectedDuration = 20;
+			this.expectedFilename = 'neat_file_in_bucket';
+
+			this.mockGcpModel = {
+				getAudioInfo: () => ({ duration: this.expectedDuration }),
+				initSpeechToTextOp: () => this.expectedOpId,
+				deleteFile: spy(() => Promise.resolve()),
+			};
+
+			await this.updateTestUser({ credit: '10.00' });
+
+			this.server = this.createServer({ gcp: this.mockGcpModel });
+
+			const { statusCode, body } = await request(this.server)
+				.post('/graphql')
+				.send({
+					query: `mutation beginTranscription($filename: String!, $languageCode: String!) {
+						beginTranscription(filename: $filename, languageCode: $languageCode) {
+							job {
+								id
+								fileKey
+								cost
+								createdAt
+								operationId
+								state
+								user {
+									id
+									credit
+								}
+							}
+						}
+					}`,
+					variables: { filename: this.expectedFilename, languageCode: 'en-US' },
+				})
+				.set('Authorization', `Bearer ${this.testUserToken}`);
+
+			if (statusCode !== 200) throw new Error(`Error starting transcription: ${body.errors}`);
+
+			this.beginResult = body.data.beginTranscription;
+		});
+
+		it('returns a job with an id', async function() {
+			assert.isOk(this.beginResult.job.id);
+		});
+
+		describe('failTranscription', function() {
+			before(async function() {
+				const { statusCode, body } = await request(this.server)
+					.post('/graphql')
+					.send({
+						query: `mutation failTranscription($operationId: String!) {
+							failTranscription(operationId: $operationId) {
+								job {
+									id
+									fileKey
+									cost
+									createdAt
+									operationId
+									state
+									user {
+										id
+										credit
+									}
+								}
+							}
+						}`,
+						variables: { operationId: this.expectedOpId },
+					})
+					.set('Authorization', `Bearer ${this.testUserToken}`);
+
+				if (statusCode !== 200) throw new Error(`Error failing transcription: ${body.errors}`);
+
+				this.failResult = body.data.failTranscription;
+			});
+
+			it('returns the same job id as before', async function() {
+				expect(this.failResult.job.id).to.equal(this.beginResult.job.id);
+			});
+
+			it('returns the same file key as before', async function() {
+				expect(this.failResult.job.fileKey).to.equal(this.expectedFilename);
+			});
+
+			it('returns the correct cost', async function() {
+				expect(this.failResult.job.cost).to.equal(0.05);
+			});
+
+			it('returns the correct user', async function() {
+				expect(this.failResult.job.user.id).to.equal(this.testUserId);
+			});
+
+			it('does not charge the user', async function() {
+				expect(this.failResult.job.user.credit).to.equal(10);
+			});
+
+			it('sets the job to a `error` state', async function() {
+				expect(this.failResult.job.state).to.equal('error');
+			});
+
+			it('returns the previous operation id', async function() {
+				expect(this.failResult.job.operationId).to.equal(this.expectedOpId);
+			});
+
+			it('cleans up the transcription file when done', async function() {
+				expect(this.mockGcpModel.deleteFile).to.have.been.called.with(this.expectedFilename);
+			});
 		});
 	});
 
@@ -321,6 +474,92 @@ describe('Transcription mutations:', function() {
 			it('cleans up the transcription file when done', async function() {
 				expect(this.mockGcpModel.deleteFile).to.have.been.called.with(this.expectedFilename);
 			});
+		});
+	});
+
+	describe('finishTranscription, when the transcription does not exist', function() {
+		before(async function() {
+			this.expectedOpId = '102020';
+
+			const server = this.createServer();
+
+			this.result = await request(server)
+				.post('/graphql')
+				.send({
+					query: `mutation finishTranscription($operationId: String!) {
+						finishTranscription(operationId: $operationId) {
+							job {
+								id
+								fileKey
+								cost
+								createdAt
+								operationId
+								state
+								user {
+									id
+									credit
+								}
+							}
+						}
+					}`,
+					variables: { operationId: this.expectedOpId },
+				})
+				.set('Authorization', `Bearer ${this.testUserToken}`);
+		});
+
+		// TODO: the failure actually throws a BadRequestError, but graphql returns a 500
+		it('returns a 500 error', async function() {
+			expect(this.result.statusCode).to.equal(500);
+		});
+
+		it('returns an error message that explains there is no pending job with the given op id', async function() {
+			expect(this.result.body.errors).to.have.lengthOf(1);
+			expect(this.result.body.errors[0].message).to.equal(
+				`Cannot finish transcription, no pending job found for user: ${this.testUserId} and operation ${this.expectedOpId}`
+			);
+		});
+	});
+
+	describe('failTranscription, when the transcription does not exist', function() {
+		before(async function() {
+			this.expectedOpId = '102020';
+
+			const server = this.createServer();
+
+			this.result = await request(server)
+				.post('/graphql')
+				.send({
+					query: `mutation failTranscription($operationId: String!) {
+						failTranscription(operationId: $operationId) {
+							job {
+								id
+								fileKey
+								cost
+								createdAt
+								operationId
+								state
+								user {
+									id
+									credit
+								}
+							}
+						}
+					}`,
+					variables: { operationId: this.expectedOpId },
+				})
+				.set('Authorization', `Bearer ${this.testUserToken}`);
+		});
+
+		// TODO: the failure actually throws a BadRequestError, but graphql returns a 500
+		it('returns a 500 error', async function() {
+			expect(this.result.statusCode).to.equal(500);
+		});
+
+		it('returns an error message that explains there is no pending job with the given op id', async function() {
+			expect(this.result.body.errors).to.have.lengthOf(1);
+			expect(this.result.body.errors[0].message).to.equal(
+				`Cannot fail transcription, no pending job found for user: ${this.testUserId} and operation ${this.expectedOpId}`
+			);
 		});
 	});
 });
