@@ -6,13 +6,14 @@ module.exports = (graphqlSchema, models) => {
 
 	graphQlApp.use(
 		'/graphql',
-		graphqlHTTP(req => {
+		graphqlHTTP((req, res) => {
 			return {
 				schema: graphqlSchema,
 				graphiql: process.env.NODE_ENV === 'development',
 				context: {
 					user: req.user,
 					models,
+					res,
 				},
 				customFormatErrorFn: err => {
 					console.error('GraphQL error:', err);

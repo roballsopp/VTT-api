@@ -29,10 +29,12 @@ module.exports = {
 		resolve: async (_, args, ctx) => {
 			const { filename, languageCode } = args;
 
+			const getInfoStart = new Date();
 			const [{ duration }, user] = await Promise.all([
 				ctx.models.gcp.getAudioInfo(filename),
 				ctx.models.user.findById(ctx.user['cognito:username']),
 			]);
+			const getInfoEnd = new Date();
 
 			const cost = GET_TOTAL_S2T_JOB_COST(duration);
 
@@ -42,8 +44,24 @@ module.exports = {
 			if (languageCode) {
 				options.languageCode = languageCode;
 			}
+			const initS2TStart = new Date();
 			const operationId = await ctx.models.gcp.initSpeechToTextOp(filename, options);
+			const initS2TEnd = new Date();
+			const transcriptionCreateStart = new Date();
 			const job = await ctx.models.transcription.create(ctx.user['cognito:username'], operationId, filename, duration);
+			const transcriptionCreateEnd = new Date();
+
+			ctx.res.locals.timingInfo = {
+				getInfoStart: getInfoStart.toISOString(),
+				getInfoEnd: getInfoEnd.toISOString(),
+				getInfoDuration: getInfoEnd - getInfoStart,
+				initS2TStart: initS2TStart.toISOString(),
+				initS2TEnd: initS2TEnd.toISOString(),
+				initS2TDuration: initS2TEnd - initS2TStart,
+				transcriptionCreateStart: transcriptionCreateStart.toISOString(),
+				transcriptionCreateEnd: transcriptionCreateEnd.toISOString(),
+				transcriptionCreateDuration: transcriptionCreateEnd - transcriptionCreateStart,
+			};
 
 			return { job, operationId };
 		},
