@@ -35,13 +35,15 @@
     "pg-hstore": "^2.3.3",
     "qs": "^6.9.4",
     "sequelize": "^6.3.5",
-    "sequelize-cli": "^6.2.0"
+    "sequelize-cli": "^6.2.0",
+    "uuid": "^8.3.1"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-spies": "^1.0.0",
     "eslint": "^6.7.2",
     "eslint-config-prettier": "^4.1.0",
+    "eslint-plugin-mocha": "^8.0.0",
     "eslint-plugin-prettier": "^3.0.1",
     "mocha": "^8.1.3",
     "nodemon": "^1.18.11",
