@@ -3,6 +3,10 @@ const { v4: uuid } = require('uuid');
 const { expect, assert } = require('chai');
 
 describe('Transcription mutations:', function() {
+	before(async function() {
+		await this.sequelize.model('transcriptionJobs').destroy({ where: {} });
+	});
+
 	describe('beginTranscription, when the user cannot afford the job', function() {
 		before(async function() {
 			this.expectedOpId = uuid();
@@ -53,9 +57,7 @@ describe('Transcription mutations:', function() {
 
 	describe('beginTranscription, when the user can afford the job', function() {
 		before(async function() {
-			await this.sequelize.model('transcriptionJobs').destroy({ where: {} });
-
-			this.expectedOpId = '09867';
+			this.expectedOpId = uuid();
 			this.expectedDuration = 20;
 			this.expectedFilename = 'neat_file_in_bucket';
 
@@ -253,8 +255,6 @@ describe('Transcription mutations:', function() {
 
 	describe('beginTranscription, when the user can afford the job, but the job is destined to fail', function() {
 		before(async function() {
-			await this.sequelize.model('transcriptionJobs').destroy({ where: {} });
-
 			this.expectedOpId = uuid();
 			this.expectedDuration = 20;
 			this.expectedFilename = 'neat_file_in_bucket';
@@ -380,8 +380,6 @@ describe('Transcription mutations:', function() {
 
 	describe('beginTranscription, when the user has an unlimited usage account', function() {
 		before(async function() {
-			await this.sequelize.model('transcriptionJobs').destroy({ where: {} });
-
 			this.expectedOpId = uuid();
 			this.expectedDuration = 20;
 			this.expectedFilename = 'neat_file_in_bucket';
