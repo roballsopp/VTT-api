@@ -1,5 +1,7 @@
 const { GraphQLSchema } = require('graphql');
 const Sentry = require('@sentry/node');
+const { Storage } = require('@google-cloud/storage');
+const { SpeechClient } = require('@google-cloud/speech');
 const { createServer } = require('./express');
 const createModels = require('./models');
 const connectToDb = require('./db');
@@ -18,7 +20,9 @@ connectToDb({
 	logging: false,
 })
 	.then(sequelize => {
-		const models = createModels({ sequelize });
+		const speechClient = new SpeechClient();
+		const storageClient = new Storage();
+		const models = createModels({ sequelize, speechClient, storageClient });
 		const app = createServer(graphqlSchema, models);
 
 		app.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}`));

@@ -1,5 +1,5 @@
 const request = require('supertest');
-const { expect, assert, spy } = require('chai');
+const { expect, assert } = require('chai');
 
 describe('Transcription mutations:', function() {
 	describe('beginTranscription, when the user cannot afford the job', function() {
@@ -8,12 +8,9 @@ describe('Transcription mutations:', function() {
 			this.expectedDuration = 20;
 			this.expectedFilename = 'neat_file_in_bucket';
 
-			const mockGcpModel = {
-				getAudioInfo: () => ({ duration: this.expectedDuration }),
-				initSpeechToTextOp: () => this.expectedOpId,
-			};
+			this.mockGCP.setFileInstance({ name: this.expectedFilename, audioDuration: this.expectedDuration });
 
-			const server = this.createServer({ gcp: mockGcpModel });
+			const server = this.createServer();
 
 			this.result = await request(server)
 				.post('/graphql')
@@ -54,15 +51,12 @@ describe('Transcription mutations:', function() {
 			this.expectedDuration = 20;
 			this.expectedFilename = 'neat_file_in_bucket';
 
-			this.mockGcpModel = {
-				getAudioInfo: () => ({ duration: this.expectedDuration }),
-				initSpeechToTextOp: () => this.expectedOpId,
-				deleteFile: spy(() => Promise.resolve()),
-			};
+			this.mockGCP.setLongRunningRecognizeResponse({ operationId: this.expectedOpId });
+			this.mockGCP.setFileInstance({ name: this.expectedFilename, audioDuration: this.expectedDuration });
 
 			await this.updateTestUser({ credit: '10.00' });
 
-			this.server = this.createServer({ gcp: this.mockGcpModel });
+			this.server = this.createServer();
 
 			const { statusCode, body } = await request(this.server)
 				.post('/graphql')
@@ -181,7 +175,7 @@ describe('Transcription mutations:', function() {
 			});
 
 			it('cleans up the transcription file when done', async function() {
-				expect(this.mockGcpModel.deleteFile).to.have.been.called.with(this.expectedFilename);
+				expect(this.mockGCP.fileInstance.delete).to.have.been.called();
 			});
 
 			describe('failTranscription, when the job is already complete', function() {
@@ -233,15 +227,12 @@ describe('Transcription mutations:', function() {
 			this.expectedDuration = 20;
 			this.expectedFilename = 'neat_file_in_bucket';
 
-			this.mockGcpModel = {
-				getAudioInfo: () => ({ duration: this.expectedDuration }),
-				initSpeechToTextOp: () => this.expectedOpId,
-				deleteFile: spy(() => Promise.resolve()),
-			};
+			this.mockGCP.setLongRunningRecognizeResponse({ operationId: this.expectedOpId });
+			this.mockGCP.setFileInstance({ name: this.expectedFilename, audioDuration: this.expectedDuration });
 
 			await this.updateTestUser({ credit: '10.00' });
 
-			this.server = this.createServer({ gcp: this.mockGcpModel });
+			this.server = this.createServer();
 
 			const { statusCode, body } = await request(this.server)
 				.post('/graphql')
@@ -334,7 +325,7 @@ describe('Transcription mutations:', function() {
 			});
 
 			it('cleans up the transcription file when done', async function() {
-				expect(this.mockGcpModel.deleteFile).to.have.been.called.with(this.expectedFilename);
+				expect(this.mockGCP.fileInstance.delete).to.have.been.called();
 			});
 		});
 	});
@@ -347,15 +338,12 @@ describe('Transcription mutations:', function() {
 			this.expectedDuration = 20;
 			this.expectedFilename = 'neat_file_in_bucket';
 
-			this.mockGcpModel = {
-				getAudioInfo: () => ({ duration: this.expectedDuration }),
-				initSpeechToTextOp: () => this.expectedOpId,
-				deleteFile: spy(() => Promise.resolve()),
-			};
+			this.mockGCP.setLongRunningRecognizeResponse({ operationId: this.expectedOpId });
+			this.mockGCP.setFileInstance({ name: this.expectedFilename, audioDuration: this.expectedDuration });
 
 			await this.updateTestUser({ credit: '0', unlimited_usage: '1' });
 
-			this.server = this.createServer({ gcp: this.mockGcpModel });
+			this.server = this.createServer();
 
 			const { statusCode, body } = await request(this.server)
 				.post('/graphql')
@@ -472,7 +460,7 @@ describe('Transcription mutations:', function() {
 			});
 
 			it('cleans up the transcription file when done', async function() {
-				expect(this.mockGcpModel.deleteFile).to.have.been.called.with(this.expectedFilename);
+				expect(this.mockGCP.fileInstance.delete).to.have.been.called();
 			});
 		});
 	});
