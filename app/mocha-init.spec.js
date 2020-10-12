@@ -1,6 +1,8 @@
 const crypto = require('crypto');
+const stream = require('stream');
 const { GraphQLSchema } = require('graphql');
 const chai = require('chai');
+const { v4: uuid } = require('uuid');
 const { CognitoIdentityProvider } = require('@aws-sdk/client-cognito-identity-provider');
 const { createServer } = require('./express');
 const createModels = require('./models');
@@ -72,8 +74,6 @@ before(async function() {
 		});
 	}
 
-	const graphqlSchema = new GraphQLSchema({ query: gqlQueries, mutation: gqlMutations });
-
 	this.sequelize = await connectToDb({
 		database: process.env.PG_DATABASE,
 		user: process.env.PG_USER,
@@ -82,7 +82,40 @@ before(async function() {
 		logging: false,
 	});
 
-	this.models = createModels({ sequelize: this.sequelize });
+	this.mockGCP = {
+		fileInstance: {},
+		setFileInstance: ({ name, audioDuration }) => {
+			const buffer = encodeWaveHeader({ duration: audioDuration });
+			this.mockGCP.fileInstance = {
+				getSignedUrl: chai.spy(() => Promise.resolve(['signed_url'])),
+				createReadStream: chai.spy(() => {
+					return stream.Readable.from(buffer);
+				}),
+				delete: chai.spy(fileToDelete => (name === fileToDelete ? Promise.resolve() : Promise.reject())),
+			};
+		},
+		longRunningRecognizeResponse: {},
+		setLongRunningRecognizeResponse: ({ operationId }) => {
+			this.mockGCP.longRunningRecognizeResponse = { latestResponse: { name: operationId } };
+		},
+		speechClient: {
+			longRunningRecognize: chai.spy(() => Promise.resolve([this.mockGCP.longRunningRecognizeResponse])),
+			checkLongRunningRecognizeProgress: chai.spy(() => Promise.resolve({ done: true, result: { results: [] } })),
+		},
+		storageClient: {
+			bucket: () => ({
+				file: () => this.mockGCP.fileInstance,
+			}),
+		},
+	};
+
+	this.models = createModels({
+		sequelize: this.sequelize,
+		speechClient: this.mockGCP.speechClient,
+		storageClient: this.mockGCP.storageClient,
+	});
+
+	const graphqlSchema = new GraphQLSchema({ query: gqlQueries, mutation: gqlMutations });
 
 	this.createServer = (modelOverrides = {}) => {
 		return createServer(graphqlSchema, { ...this.models, ...modelOverrides });
@@ -94,3 +127,22 @@ before(async function() {
 	this.testUserToken = AuthenticationResult.IdToken;
 	this.updateTestUser = updateTestUser;
 });
+
+function encodeWaveHeader({ duration }) {
+	const fakeDataLength = duration * 88200;
+	const buffer = new Buffer(44);
+	buffer.write('RIFF', 0, 4, 'ascii');
+	buffer.writeUInt32LE(4 + 24 + 8 + fakeDataLength, 4); // WAVE field + format header + data header + data
+	buffer.write('WAVE', 8, 4, 'ascii');
+	buffer.write('fmt ', 12, 4, 'ascii');
+	buffer.writeUInt32LE(16, 16); // fmt size
+	buffer.writeUInt16LE(1, 20); // Audio format 1=PCM
+	buffer.writeUInt16LE(1, 22); // audio channels
+	buffer.writeUInt32LE(44100, 24); // sample rate
+	buffer.writeUInt32LE(88200, 28); // Bytes per second == SampleRate * NumChannels * bitDepth / 8
+	buffer.writeUInt16LE(2, 32); // block align NumChannels * bitDepth / 8
+	buffer.writeUInt16LE(16, 34); // bitDepth
+	buffer.write('data', 36, 4, 'ascii');
+	buffer.writeUInt32LE(fakeDataLength, 40); // data length == NumSamples * NumChannels * bitDepth / 8
+	return buffer;
+}
