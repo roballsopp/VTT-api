@@ -12,6 +12,21 @@ Sentry.init({ dsn: process.env.SENTRY_DSN });
 
 const graphqlSchema = new GraphQLSchema({ query: gqlQueries, mutation: gqlMutations });
 
+process.on('beforeExit', code => {
+	// eslint-disable-next-line no-console
+	console.log(`Exiting with code ${code}`);
+});
+
+process.on('exit', code => {
+	// eslint-disable-next-line no-console
+	console.log(`Exit with code ${code}`);
+});
+
+process.on('SIGINT', () => {
+	// eslint-disable-next-line no-console
+	console.log('Got SIGINT. Exiting...');
+});
+
 connectToDb({
 	database: process.env.PG_DATABASE,
 	user: process.env.PG_USER,
@@ -25,6 +40,7 @@ connectToDb({
 		const models = createModels({ sequelize, speechClient, storageClient });
 		const app = createServer(graphqlSchema, models);
 
+		// eslint-disable-next-line no-console
 		app.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}`));
 	})
 	.catch(err => {
