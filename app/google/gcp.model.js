@@ -29,7 +29,7 @@ module.exports = function createGCPModel({ speechClient, storageClient }) {
 		return url;
 	}
 
-	async function getFileBytes(filename, start, end) {
+	async function getFileBytes(filename, { start = 0, end } = {}) {
 		const file = audioBucket.file(filename);
 		const readable = await file.createReadStream({ start, end });
 		const chunks = [];
