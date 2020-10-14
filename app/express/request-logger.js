@@ -24,12 +24,10 @@ module.exports = (req, res, next) => {
 		const reqEnd = new Date();
 		const reqDuration = reqEnd - reqStart;
 
-		const extra = res.locals.timingInfo || {};
-
 		if (process.env.NODE_ENV === 'production') {
-			console.log(JSON.stringify({ ...reqInfo, ...extra, reqEnd: reqEnd.toISOString(), reqDuration }));
+			console.log(JSON.stringify({ ...reqInfo, reqEnd: reqEnd.toISOString(), reqDuration }));
 		} else {
-			console.log('Request log:', { ...reqInfo, ...extra, reqEnd: reqEnd.toISOString(), reqDuration });
+			console.log('Request log:', { ...reqInfo, reqEnd: reqEnd.toISOString(), reqDuration });
 		}
 	});
 
@@ -37,10 +35,10 @@ module.exports = (req, res, next) => {
 };
 
 function cleanupGql(path, body) {
-	if (path === '/graphql') {
+	if (path === '/graphql' && body) {
 		return {
 			...body,
-			query: body.query.replace(/\s+/g, ' '),
+			query: body.query && body.query.replace(/\s+/g, ' '),
 		};
 	}
 }

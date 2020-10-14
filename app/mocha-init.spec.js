@@ -2,7 +2,6 @@ const crypto = require('crypto');
 const stream = require('stream');
 const { GraphQLSchema } = require('graphql');
 const chai = require('chai');
-const { v4: uuid } = require('uuid');
 const { CognitoIdentityProvider } = require('@aws-sdk/client-cognito-identity-provider');
 const { createServer } = require('./express');
 const createModels = require('./models');
