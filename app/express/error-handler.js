@@ -4,10 +4,7 @@ const { BadRequestError, ForbiddenError, NotFoundError, ServerError, Unauthorize
 
 // eslint-disable-next-line no-unused-vars
 module.exports = (err, req, res, next) => {
-	// ignore auth failures for now
-	if (!(err instanceof JwtUnauthorizedError)) {
-		Sentry.captureException(err);
-	}
+	Sentry.captureException(err);
 
 	const stack = getStackTraceFromError(err);
 	const statusCode = getStatusCodeFromError(err);
