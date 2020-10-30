@@ -10,8 +10,8 @@
     "dev": "nodemon ./app/index.js",
     "test": "mocha --exit",
     "migration:generate": "sequelize migration:generate",
-    "migrate": "sequelize db:migrate",
-    "migrate:undo": "sequelize db:migrate:undo",
+    "migrate": "sequelize db:migrate --debug=true",
+    "migrate:undo": "sequelize db:migrate:undo --debug=true",
     "seed:generate": "sequelize seed:generate",
     "seed:all": "sequelize db:seed:all"
   },
