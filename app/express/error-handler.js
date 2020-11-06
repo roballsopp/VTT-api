@@ -4,7 +4,7 @@ const { BadRequestError, ForbiddenError, NotFoundError, ServerError, Unauthorize
 
 // eslint-disable-next-line no-unused-vars
 module.exports = (err, req, res, next) => {
-	Sentry.captureException(err);
+	Sentry.captureException(err, { user: req.user });
 
 	const stack = getStackTraceFromError(err);
 	const statusCode = getStatusCodeFromError(err);
