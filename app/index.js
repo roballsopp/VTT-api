@@ -12,19 +12,9 @@ Sentry.init({ dsn: process.env.SENTRY_DSN });
 
 const graphqlSchema = new GraphQLSchema({ query: gqlQueries, mutation: gqlMutations });
 
-process.on('beforeExit', code => {
+process.on('SIGTERM', () => {
 	// eslint-disable-next-line no-console
-	console.log(`Exiting with code ${code}`);
-});
-
-process.on('exit', code => {
-	// eslint-disable-next-line no-console
-	console.log(`Exit with code ${code}`);
-});
-
-process.on('SIGINT', () => {
-	// eslint-disable-next-line no-console
-	console.log('Got SIGINT. Exiting...');
+	console.log('Got SIGTERM. Exiting...');
 });
 
 connectToDb({
