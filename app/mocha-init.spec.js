@@ -1,4 +1,3 @@
-const crypto = require('crypto');
 const stream = require('stream');
 const { GraphQLSchema } = require('graphql');
 const chai = require('chai');
@@ -8,7 +7,7 @@ const createModels = require('./models');
 const connectToDb = require('./db');
 const gqlQueries = require('./root-query.graphql');
 const gqlMutations = require('./root-mutaton.graphql');
-const { COGNITO_POOL_ID, COGNITO_CLIENT_SECRET, COGNITO_CLIENT_ID, COGNITO_POOL_REGION } = require('./config');
+const { COGNITO_POOL_ID, COGNITO_CLIENT_ID, COGNITO_POOL_REGION } = require('./config');
 
 const cognitoClient = new CognitoIdentityProvider({ region: COGNITO_POOL_REGION });
 
@@ -57,11 +56,6 @@ before(async function() {
 		AuthParameters: {
 			USERNAME: testUserEmail,
 			PASSWORD: testUserPassword,
-			SECRET_HASH: crypto
-				.createHmac('SHA256', COGNITO_CLIENT_SECRET)
-				.update(`${testUserEmail}${COGNITO_CLIENT_ID}`)
-				.digest('base64')
-				.toString(),
 		},
 	});
 
@@ -108,10 +102,25 @@ before(async function() {
 		},
 	};
 
+	this.mockPaypalClient = {
+		execute: chai.spy(request => {
+			this.mockPaypalClient.request = request;
+			return Promise.resolve({
+				statusCode: this.mockPaypalClient._statusCode,
+				result: this.mockPaypalClient._result,
+			});
+		}),
+		setResponse: (statusCode, result) => {
+			this.mockPaypalClient._statusCode = statusCode;
+			this.mockPaypalClient._result = result;
+		},
+	};
+
 	this.models = createModels({
 		sequelize: this.sequelize,
 		speechClient: this.mockGCP.speechClient,
 		storageClient: this.mockGCP.storageClient,
+		paypalClient: this.mockPaypalClient,
 	});
 
 	const graphqlSchema = new GraphQLSchema({ query: gqlQueries, mutation: gqlMutations });

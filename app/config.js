@@ -6,7 +6,6 @@ const PG_USER = process.env.PG_USER;
 const PG_PWD = process.env.PG_PWD;
 const PG_HOST = process.env.PG_HOST;
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
-const COGNITO_CLIENT_SECRET = process.env.COGNITO_CLIENT_SECRET;
 const COGNITO_POOL_ID = process.env.COGNITO_POOL_ID;
 const COGNITO_POOL_REGION = process.env.COGNITO_POOL_REGION;
 const GCP_PROJECT = process.env.GCP_PROJECT;
@@ -27,7 +26,6 @@ module.exports = {
 	PG_PWD,
 	PG_HOST,
 	COGNITO_CLIENT_ID,
-	COGNITO_CLIENT_SECRET,
 	COGNITO_POOL_ID,
 	COGNITO_POOL_REGION,
 	SPEECH_TO_TEXT_COST_PER_MINUTE,

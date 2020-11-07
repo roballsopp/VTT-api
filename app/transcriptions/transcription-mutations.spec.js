@@ -21,17 +21,17 @@ describe('Transcription mutations:', function() {
 				.post('/graphql')
 				.send({
 					query: `mutation beginTranscription($filename: String!, $languageCode: String!) {
-					beginTranscription(filename: $filename, languageCode: $languageCode) {
-						job {
-							id
-							user {
+						beginTranscription(filename: $filename, languageCode: $languageCode) {
+							job {
 								id
+								user {
+									id
+								}
+								operationId
+								state
 							}
-							operationId
-							state
 						}
-					}
-				}`,
+					}`,
 					variables: { filename: this.expectedFilename, languageCode: 'en-US' },
 				})
 				.set('Authorization', `Bearer ${this.testUserToken}`);
@@ -210,21 +210,21 @@ describe('Transcription mutations:', function() {
 						.post('/graphql')
 						.send({
 							query: `mutation failTranscription($operationId: String!) {
-							failTranscription(operationId: $operationId) {
-								job {
-									id
-									fileKey
-									cost
-									createdAt
-									operationId
-									state
-									user {
+								failTranscription(operationId: $operationId) {
+									job {
 										id
-										credit
+										fileKey
+										cost
+										createdAt
+										operationId
+										state
+										user {
+											id
+											credit
+										}
 									}
 								}
-							}
-						}`,
+							}`,
 							variables: { operationId: this.expectedOpId },
 						})
 						.set('Authorization', `Bearer ${this.testUserToken}`);
