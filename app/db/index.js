@@ -1,4 +1,5 @@
 const { Sequelize } = require('sequelize');
+const PaypalOrder = require('./models/PaypalOrder');
 const TranscriptionJob = require('./models/TranscriptionJob');
 
 module.exports = ({ database, user, password, host, logging = false }) => {
@@ -17,6 +18,7 @@ module.exports = ({ database, user, password, host, logging = false }) => {
 		dialect: 'postgres',
 	});
 
+	PaypalOrder.init(sequelize);
 	TranscriptionJob.init(sequelize);
 
 	return sequelize.authenticate().then(() => sequelize);

@@ -1,30 +1,88 @@
 const checkoutNodeJssdk = require('@paypal/checkout-server-sdk');
-const { ServerError } = require('../errors');
+const { ForbiddenError, BadRequestError } = require('../errors');
 
-const clientId = process.env.PAYPAL_CLIENT_ID;
-const clientSecret = process.env.PAYPAL_SECRET;
+module.exports = function createPaypalModel({ sequelize, paypalClient }) {
+	const paypalOrdersTable = sequelize.model('paypalOrders');
 
-function environment() {
-	if (process.env.NODE_ENV === 'production') {
-		return new checkoutNodeJssdk.core.LiveEnvironment(clientId, clientSecret);
+	async function findOrder(userId, orderId) {
+		if (!userId) throw new ForbiddenError('Missing session user.');
+		if (!orderId) throw new BadRequestError(`Order id required.`);
+		return paypalOrdersTable.findOne({ where: { userId, orderId } });
 	}
-	return new checkoutNodeJssdk.core.SandboxEnvironment(clientId, clientSecret);
-}
 
-function client() {
-	return new checkoutNodeJssdk.core.PayPalHttpClient(environment());
-}
+	async function markOrderApplied(userId, orderId) {
+		if (!userId) throw new ForbiddenError('Missing session user.');
+		if (!orderId) throw new BadRequestError(`Order id required.`);
 
-async function getOrder(orderId) {
-	const request = new checkoutNodeJssdk.orders.OrdersGetRequest(orderId);
-	return client()
-		.execute(request)
-		.then(resp => resp.result)
-		.catch(err => {
-			throw new ServerError(`PaypalError - statusCode: ${err.statusCode}, ${err.message}`);
+		const dbOrder = await findOrder(userId, orderId);
+
+		if (!dbOrder) {
+			throw new BadRequestError(`Cannot find order ${orderId} for user ${userId}`);
+		}
+
+		return dbOrder.update({ applied: true });
+	}
+
+	async function createOrder(userId, purchaseAmt) {
+		if (!userId) throw new ForbiddenError('Missing session user.');
+
+		if (!Number.isFinite(purchaseAmt)) {
+			throw new BadRequestError(`Expected a number for purchaseAmt, but got ${purchaseAmt}`);
+		}
+
+		const request = new checkoutNodeJssdk.orders.OrdersCreateRequest();
+		request.requestBody({
+			intent: 'CAPTURE',
+			purchase_units: [
+				{
+					amount: {
+						value: purchaseAmt,
+						currency_code: 'USD',
+					},
+				},
+			],
+			application_context: {
+				shipping_preference: 'NO_SHIPPING',
+			},
 		});
-}
 
-module.exports = function createPaypalModel() {
-	return { getOrder };
+		const { result: order } = await paypalClient.execute(request);
+
+		return paypalOrdersTable.create({
+			userId,
+			orderId: order.id,
+			orderStatus: order.status,
+			currencyCode: 'USD',
+			amount: purchaseAmt,
+		});
+	}
+
+	async function captureOrder(userId, orderId) {
+		if (!userId) throw new ForbiddenError('Missing session user.');
+		if (!orderId) throw new BadRequestError(`Order id required.`);
+
+		const request = new checkoutNodeJssdk.orders.OrdersCaptureRequest(orderId);
+		const resp = await paypalClient.execute(request);
+		const order = resp.result;
+
+		if (resp.statusCode >= 400) {
+			throw new BadRequestError(`PaypalError - statusCode: ${resp.status_code}, ${resp.result}`);
+		}
+
+		const dbOrder = await findOrder(userId, orderId);
+
+		if (!dbOrder) {
+			throw new BadRequestError(`Cannot find order ${orderId} for user ${userId}`);
+		}
+
+		return dbOrder.update({
+			orderStatus: order.status,
+			payerId: order.payer.payer_id,
+			payerGivenName: order.payer.name.given_name,
+			payerSurname: order.payer.name.surname,
+			payerEmail: order.payer.email_address,
+		});
+	}
+
+	return { createOrder, findOrder, captureOrder, markOrderApplied };
 };

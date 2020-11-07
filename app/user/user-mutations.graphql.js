@@ -13,6 +13,7 @@ module.exports = {
 		},
 		resolve: async (_, args, ctx) => {
 			const { orderId } = args;
+			await ctx.models.paypal.captureOrder(ctx.user['cognito:username'], orderId);
 			return ctx.models.user.addCreditFromOrder(ctx.user['cognito:username'], orderId);
 		},
 	},
