@@ -1,21 +1,7 @@
-const { ForbiddenError, BadRequestError } = require('../errors');
 const checkoutNodeJssdk = require('@paypal/checkout-server-sdk');
+const { ForbiddenError, BadRequestError } = require('../errors');
 
-const clientId = process.env.PAYPAL_CLIENT_ID;
-const clientSecret = process.env.PAYPAL_SECRET;
-
-function environment() {
-	if (process.env.NODE_ENV === 'production') {
-		return new checkoutNodeJssdk.core.LiveEnvironment(clientId, clientSecret);
-	}
-	return new checkoutNodeJssdk.core.SandboxEnvironment(clientId, clientSecret);
-}
-
-function client() {
-	return new checkoutNodeJssdk.core.PayPalHttpClient(environment());
-}
-
-module.exports = function createPaypalModel({ sequelize }) {
+module.exports = function createPaypalModel({ sequelize, paypalClient }) {
 	const paypalOrdersTable = sequelize.model('paypalOrders');
 
 	async function findOrder(userId, orderId) {
@@ -60,7 +46,7 @@ module.exports = function createPaypalModel({ sequelize }) {
 			},
 		});
 
-		const { result: order } = await client().execute(request);
+		const { result: order } = await paypalClient.execute(request);
 
 		return paypalOrdersTable.create({
 			userId,
@@ -76,7 +62,7 @@ module.exports = function createPaypalModel({ sequelize }) {
 		if (!orderId) throw new BadRequestError(`Order id required.`);
 
 		const request = new checkoutNodeJssdk.orders.OrdersCaptureRequest(orderId);
-		const resp = await client().execute(request);
+		const resp = await paypalClient.execute(request);
 		const order = resp.result;
 
 		if (resp.statusCode >= 400) {
