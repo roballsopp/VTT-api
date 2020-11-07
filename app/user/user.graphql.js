@@ -6,7 +6,6 @@ const {
 	GraphQLString,
 	GraphQLBoolean,
 } = require('graphql');
-const { GraphQLDateTime } = require('graphql-iso-date');
 
 module.exports.UserType = new GraphQLObjectType({
 	name: 'User',
@@ -15,6 +14,5 @@ module.exports.UserType = new GraphQLObjectType({
 		email: { type: GraphQLNonNull(GraphQLString) },
 		credit: { type: GraphQLNonNull(GraphQLFloat) },
 		unlimitedUsage: { type: GraphQLNonNull(GraphQLBoolean) },
-		lastOrderDate: { type: GraphQLDateTime },
 	}),
 });
