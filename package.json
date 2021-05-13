@@ -16,7 +16,7 @@
     "seed:all": "sequelize db:seed:all"
   },
   "author": "",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^1.0.0-gamma.8",
     "@google-cloud/speech": "^4.1.2",
